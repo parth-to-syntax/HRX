@@ -17,22 +17,41 @@ import Logo from '@/components/ui/Logo'
 import { InteractiveCard } from '@/components/ui/interactive-card'
 
 const menuItems = [
+  // Employees should be visible to everyone
   { path: '/dashboard/employees', icon: Users, label: 'Employees', roles: ['Employee', 'HR Officer', 'Payroll Officer', 'Admin'] },
+  // Attendance for employees and HR/Admin
   { path: '/dashboard/attendance', icon: Clock, label: 'Attendance', roles: ['Employee', 'HR Officer', 'Admin'] },
-  { path: '/dashboard/leave', icon: Calendar, label: 'Time Off', roles: ['Employee', 'HR Officer', 'Admin'] },
-  { path: '/dashboard/payroll', icon: DollarSign, label: 'Payroll', roles: ['Employee', 'Payroll Officer', 'Admin'] },
+  // Time Off visible to Employee, HR, Payroll, Admin (HR/Admin approve all; others see only their own)
+  { path: '/dashboard/leave', icon: Calendar, label: 'Time Off', roles: ['Employee', 'HR Officer', 'Payroll Officer', 'Admin'] },
+  // Payroll visible to all roles, but views are role-scoped in the page (Admin/Payroll see everyone; HR/Employee see their own)
+  { path: '/dashboard/payroll', icon: DollarSign, label: 'Payroll', roles: ['Employee', 'HR Officer', 'Payroll Officer', 'Admin'] },
+  // Reports accessible only to HR, Payroll and Admin
   { path: '/dashboard/reports', icon: FileText, label: 'Reports', roles: ['HR Officer', 'Payroll Officer', 'Admin'] },
+  // Settings only Admin
   { path: '/dashboard/settings', icon: Settings, label: 'Settings', roles: ['Admin'] },
 ]
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation()
   const currentUser = useSelector((state) => state.user.currentUser)
-  const userRole = currentUser?.user?.role || currentUser?.role || 'employee'
+  
+  // Get user role and normalize it
+  const userRole = currentUser?.user?.role || currentUser?.role || 'Employee'
+  
+  // Debug: Log the user role to console
+  console.log('Current User Role:', userRole)
+  console.log('Current User Object:', currentUser)
 
-  const allowedItems = menuItems.filter(item => 
-    item.roles.map(r => r.toLowerCase()).includes(userRole.toLowerCase())
-  )
+  const allowedItems = menuItems.filter(item => {
+    // Case-insensitive role matching
+    const itemRolesLower = item.roles.map(r => r.toLowerCase().trim())
+    const userRoleLower = (userRole || '').toLowerCase().trim()
+    const isAllowed = itemRolesLower.includes(userRoleLower)
+    
+    console.log(`Checking ${item.label}: user=${userRoleLower}, allowed=${itemRolesLower}, match=${isAllowed}`)
+    
+    return isAllowed
+  })
 
   return (
     <>

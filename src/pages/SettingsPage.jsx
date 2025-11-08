@@ -2,180 +2,146 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Shield, Calendar, DollarSign, Sun } from 'lucide-react'
+import { Shield, Calendar, DollarSign, Sun, Settings } from 'lucide-react'
+import PageHeader from '@/components/layout/PageHeader'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('roles')
+  const [activeTab, setActiveTab] = useState('user-setting')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showNewUserModal, setShowNewUserModal] = useState(false)
+  const [users, setUsers] = useState([
+    {
+      id: 1,
+      username: '',
+      loginId: '',
+      email: 'abcd@gmail.com',
+      role: '',
+      permissions: {
+        employees: false,
+        attendance: false,
+        timeOff: false,
+        payroll: false,
+        reports: false,
+        settings: false
+      }
+    }
+  ])
 
   const tabs = [
-    { id: 'roles', label: 'Roles & Permissions', icon: Shield },
-    { id: 'leave', label: 'Leave Policies', icon: Calendar },
-    { id: 'payroll', label: 'Payroll Settings', icon: DollarSign },
-    { id: 'holidays', label: 'Holiday Calendar', icon: Sun },
+    { id: 'user-setting', label: 'User Setting', icon: Settings },
+    { id: 'employees', label: 'Employees', icon: Shield },
+    { id: 'attendance', label: 'Attendance', icon: Calendar },
+    { id: 'time-off', label: 'Time Off', icon: Sun },
+    { id: 'payroll', label: 'Payroll', icon: DollarSign },
+    { id: 'reports', label: 'Reports', icon: Shield },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
+  const handleAddUser = () => {
+    setUsers([...users, {
+      id: users.length + 1,
+      username: '',
+      loginId: '',
+      email: '',
+      role: '',
+      permissions: {
+        employees: false,
+        attendance: false,
+        timeOff: false,
+        payroll: false,
+        reports: false,
+        settings: false
+      }
+    }])
+  }
+
+  const handlePermissionChange = (userId, module) => {
+    setUsers(users.map(user => 
+      user.id === userId 
+        ? { ...user, permissions: { ...user.permissions, [module]: !user.permissions[module] } }
+        : user
+    ))
+  }
+
+  const handleInputChange = (userId, field, value) => {
+    setUsers(users.map(user => 
+      user.id === userId 
+        ? { ...user, [field]: value }
+        : user
+    ))
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage system configuration and policies</p>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Tabs */}
-        <div className="w-64 space-y-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-accent'
-                }`}
-              >
-                <Icon size={18} />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Tab Content */}
-        <div className="flex-1">
-          {activeTab === 'roles' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Roles & Permissions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {['Admin', 'HR Officer', 'Payroll Officer', 'Employee'].map((role) => (
-                    <div key={role} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold">{role}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Manage permissions for {role.toLowerCase()} role
-                          </p>
-                        </div>
-                        <Button variant="outline" size="sm">Edit</Button>
-                      </div>
-                    </div>
+    <>
+      <PageHeader 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        showNewButton={true}
+        onNewClick={handleAddUser}
+      />
+      <div className="p-8">
+        {/* Main Container with Border */}
+        <Card className="border-2">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 font-semibold text-sm">User name</th>
+                    <th className="text-left p-4 font-semibold text-sm">Login id</th>
+                    <th className="text-left p-4 font-semibold text-sm">Email</th>
+                    <th className="text-left p-4 font-semibold text-sm">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id} className="border-b hover:bg-muted/30">
+                      <td className="p-3">
+                        <Input
+                          value={user.username}
+                          onChange={(e) => handleInputChange(user.id, 'username', e.target.value)}
+                          placeholder="Enter name"
+                          className="h-9 text-sm"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <Input
+                          value={user.loginId}
+                          onChange={(e) => handleInputChange(user.id, 'loginId', e.target.value)}
+                          placeholder="Enter login ID"
+                          className="h-9 text-sm"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <Input
+                          value={user.email}
+                          onChange={(e) => handleInputChange(user.id, 'email', e.target.value)}
+                          placeholder="Enter email"
+                          className="h-9 text-sm"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <select
+                          value={user.role}
+                          onChange={(e) => handleInputChange(user.id, 'role', e.target.value)}
+                          className="w-full h-9 px-3 py-2 border rounded-md text-sm bg-background"
+                        >
+                          <option value="">Select role</option>
+                          <option value="Employee">Employee</option>
+                          <option value="Admin">Admin</option>
+                          <option value="HR Officer">HR Officer</option>
+                          <option value="Payroll Officer">Payroll Officer</option>
+                        </select>
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === 'leave' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Leave Policies</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Annual Leave Days</label>
-                      <Input type="number" defaultValue={15} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Sick Leave Days</label>
-                      <Input type="number" defaultValue={10} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Casual Leave Days</label>
-                      <Input type="number" defaultValue={5} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Carry Forward Days</label>
-                      <Input type="number" defaultValue={5} />
-                    </div>
-                  </div>
-                  <Button className="mt-4">Save Changes</Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === 'payroll' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Payroll Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Tax Rate (%)</label>
-                      <Input type="number" defaultValue={15} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Payment Cycle</label>
-                      <select className="w-full px-3 py-2 border rounded-lg">
-                        <option>Monthly</option>
-                        <option>Bi-weekly</option>
-                        <option>Weekly</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Payment Date</label>
-                      <Input type="number" defaultValue={1} min={1} max={31} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Currency</label>
-                      <select className="w-full px-3 py-2 border rounded-lg">
-                        <option>USD</option>
-                        <option>EUR</option>
-                        <option>GBP</option>
-                      </select>
-                    </div>
-                  </div>
-                  <Button className="mt-4">Save Changes</Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === 'holidays' && (
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Holiday Calendar</CardTitle>
-                  <Button size="sm">Add Holiday</Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[
-                    { date: '2025-11-28', name: 'Thanksgiving' },
-                    { date: '2025-12-25', name: 'Christmas Day' },
-                    { date: '2026-01-01', name: 'New Year\'s Day' },
-                  ].map((holiday, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{holiday.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(holiday.date).toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">Remove</Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </>
   )
 }

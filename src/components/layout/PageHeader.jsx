@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User as UserIcon, Plane } from 'lucide-react'
+import { Search, LogOut, User as UserIcon, Plane, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '@/redux/slices/userSlice'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function PageHeader({ 
   searchTerm, 
@@ -20,6 +21,7 @@ export default function PageHeader({
   const dispatch = useDispatch()
   const { currentUser } = useSelector((state) => state.user)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const { isDarkMode, toggleTheme } = useTheme()
 
   const handleLogout = () => {
     dispatch(logout())
@@ -68,6 +70,19 @@ export default function PageHeader({
             className="pl-9 bg-muted/50 h-10"
           />
         </div>
+
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 transition-colors flex items-center justify-center"
+          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {isDarkMode ? (
+            <Sun className="text-foreground" size={20} />
+          ) : (
+            <Moon className="text-foreground" size={20} />
+          )}
+        </button>
 
         {/* Profile Dropdown */}
         <div className="relative">

@@ -277,13 +277,15 @@ export default function EmployeeDirectory() {
               className="fixed inset-0 bg-black/50 z-50"
               onClick={() => setSelectedEmployee(null)}
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
-            >
-              <Card>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Card>
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold">Employee Details</h2>
@@ -309,40 +311,102 @@ export default function EmployeeDirectory() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Login ID</p>
-                      <p className="font-medium">{selectedEmployee.user?.login_id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{selectedEmployee.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium">{selectedEmployee.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium">{selectedEmployee.department?.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Role</p>
-                      <p className="font-medium">{selectedEmployee.user?.role}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Join Date</p>
-                      <p className="font-medium">
-                        {new Date(selectedEmployee.date_of_joining).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-medium">{selectedEmployee.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gender</p>
-                      <p className="font-medium">{selectedEmployee.gender}</p>
+                  {/* Private Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">Private Information</h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Date of Birth</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.dob || ''}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Account Number</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.bank_account || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Residing Address</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.address || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Bank Name</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.bank_name || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Nationality</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.nationality || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">IFSC Code</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.ifsc_code || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Personal Email</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.email || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">PAN No</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.pan_no || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Gender</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.gender || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">UAN NO</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.uan_no || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Marital Status</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.marital_status || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Emp Code</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">{selectedEmployee.user?.login_id || ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="text-sm text-muted-foreground min-w-[140px]">Date of Joining</label>
+                        <div className="flex-1 border-b border-muted-foreground/30 pb-1">
+                          <span className="text-sm">
+                            {selectedEmployee.date_of_joining ? new Date(selectedEmployee.date_of_joining).toLocaleDateString() : ''}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -353,7 +417,8 @@ export default function EmployeeDirectory() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -369,13 +434,15 @@ export default function EmployeeDirectory() {
               className="fixed inset-0 bg-black/50 z-50"
               onClick={() => setShowAttendanceModal(null)}
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
-            >
-              <Card>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Card>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold">Attendance</h2>
@@ -454,7 +521,8 @@ export default function EmployeeDirectory() {
                   })()}
                 </CardContent>
               </Card>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

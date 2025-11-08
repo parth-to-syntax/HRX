@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Provider, useSelector } from 'react-redux'
 import { store } from './redux/store'
+import { ThemeProvider } from './contexts/ThemeContext'
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -63,10 +64,12 @@ function AppRoutes() {
 function App() {
   return (
     <Provider store={store}>
-      <Router>
-        <CustomCursor />
-        <AppRoutes />
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <CustomCursor />
+          <AppRoutes />
+        </Router>
+      </ThemeProvider>
     </Provider>
   )
 }

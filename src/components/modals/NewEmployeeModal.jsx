@@ -17,6 +17,17 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
   const [emailSent, setEmailSent] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
+  const resetForm = () => {
+    setFormData({ email: '', loginId: '', password: '' })
+    setEmailSent(false)
+    setShowSuccess(false)
+  }
+
+  const handleClose = () => {
+    resetForm()
+    onClose()
+  }
+
   const generateLoginId = () => {
     // Generate Login ID based on name initials and date
     // Format: HRXXXXYYYYNNN (e.g., HRJODO20220001)
@@ -71,30 +82,43 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
       return
     }
 
+    // Extract name from email
+    const emailParts = formData.email.split('@')[0].split('.')
+    const firstName = emailParts[0] 
+      ? emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1).toLowerCase()
+      : 'New'
+    const lastName = emailParts[1] 
+      ? emailParts[1].charAt(0).toUpperCase() + emailParts[1].slice(1).toLowerCase()
+      : 'Employee'
+
+    // Generate unique IDs
+    const timestamp = Date.now()
+    const randomId = Math.random().toString(36).substring(2, 15)
+
     // Create employee record
     const newEmployee = {
-      id: `550e8400-e29b-41d4-a716-${Date.now()}`,
-      user_id: `550e8400-e29b-41d4-a716-${Date.now() + 1}`,
+      id: `550e8400-e29b-41d4-a716-${timestamp.toString().substring(0, 12)}`,
+      user_id: `550e8400-e29b-41d4-a716-${(timestamp + 1).toString().substring(0, 12)}`,
       company_id: '550e8400-e29b-41d4-a716-446655440000',
-      department_id: null,
-      first_name: formData.email.split('@')[0].split('.')[0] || 'New',
-      last_name: formData.email.split('@')[0].split('.')[1] || 'Employee',
+      department_id: '550e8400-e29b-41d4-a716-446655440101',
+      first_name: firstName,
+      last_name: lastName,
       email: formData.email,
-      phone: '',
-      location: '',
+      phone: '+1 234-567-' + Math.floor(1000 + Math.random() * 9000),
+      location: 'New York',
       manager_id: null,
-      avatar_url: `https://ui-avatars.com/api/?name=${formData.email.split('@')[0]}&background=0d9488&color=fff`,
+      avatar_url: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=${Math.floor(Math.random() * 16777215).toString(16)}&color=fff`,
       resume_url: null,
-      about_job: '',
-      interests: '',
-      hobbies: '',
+      about_job: `Joined as a new team member on ${new Date().toLocaleDateString()}`,
+      interests: 'Professional Development',
+      hobbies: 'Learning new technologies',
       dob: '',
       nationality: '',
       gender: '',
       marital_status: '',
       address: '',
       date_of_joining: new Date().toISOString().split('T')[0],
-      joining_serial: Date.now(),
+      joining_serial: timestamp,
       has_bank_account: false,
       has_manager: false,
       user: {
@@ -104,17 +128,20 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
         password: formData.password
       },
       department: {
-        name: 'Unassigned',
-        id: null
+        name: 'Engineering',
+        id: '550e8400-e29b-41d4-a716-446655440101'
       },
-      position: 'Employee'
+      position: 'Software Engineer'
     }
 
+    console.log('Creating new employee:', newEmployee)
     dispatch(addEmployee(newEmployee))
     
+    // Show success notification
+    alert(`Employee ${firstName} ${lastName} created successfully!`)
+    
     // Reset form and close
-    setFormData({ email: '', loginId: '', password: '' })
-    setEmailSent(false)
+    resetForm()
     onClose()
   }
 
@@ -130,23 +157,25 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Card>
-              <CardContent className="p-6 space-y-6">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <Card>
+                <CardContent className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold">Add New Employee</h2>
                   <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X size={24} />
@@ -238,7 +267,7 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
                 <div className="flex gap-3 justify-end pt-4 border-t">
                   <Button
                     variant="outline"
-                    onClick={onClose}
+                    onClick={handleClose}
                   >
                     Cancel
                   </Button>
@@ -259,6 +288,7 @@ export default function NewEmployeeModal({ isOpen, onClose }) {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </motion.div>
         </>
       )}

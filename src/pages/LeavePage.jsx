@@ -1,35 +1,38 @@
 import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { Calendar, Filter } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { X, Upload } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { addRequest, updateStatus } from '@/redux/slices/leaveSlice'
+import PageHeader from '@/components/layout/PageHeader'
 
 export default function LeavePage() {
   const dispatch = useDispatch()
   const { currentUser } = useSelector((state) => state.user)
-  const { requests, balance } = useSelector((state) => state.leave)
-  const [filter, setFilter] = useState('All')
-  const [showModal, setShowModal] = useState(false)
+  const { requests } = useSelector((state) => state.leave)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showNewModal, setShowNewModal] = useState(false)
   const [formData, setFormData] = useState({
-    type: 'Annual Leave',
+    employee: '',
+    timeOffType: 'Paid time off',
     startDate: '',
     endDate: '',
-    reason: '',
+    allocation: '',
+    attachment: null,
   })
 
+  // Users who should only see their own time-off entries
+  const isSelfScopedUser = ['Employee', 'Payroll Officer'].includes(currentUser?.role)
   const isHROrAdmin = ['HR Officer', 'Admin'].includes(currentUser?.role)
-  
-  const userRequests = isHROrAdmin 
-    ? requests 
-    : requests.filter(r => r.employeeId === currentUser.id)
 
-  const filteredRequests = filter === 'All' 
-    ? userRequests 
-    : userRequests.filter(r => r.status === filter)
+  const handleApprove = (id) => {
+    dispatch(updateStatus({ id, status: 'Approved' }))
+  }
+
+  const handleReject = (id) => {
+    dispatch(updateStatus({ id, status: 'Rejected' }))
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -40,226 +43,289 @@ export default function LeavePage() {
 
     const newRequest = {
       id: `LV${Date.now()}`,
-      employeeId: currentUser.id,
-      employeeName: currentUser.name,
-      ...formData,
-      days,
+      employeeId: isSelfScopedUser ? currentUser.id : 'admin',
+      employeeName: isSelfScopedUser 
+        ? `${currentUser.first_name} ${currentUser.last_name}`
+        : formData.employee,
+      type: formData.timeOffType,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      days: formData.allocation || days,
       status: 'Pending',
       appliedOn: new Date().toISOString().split('T')[0],
+      attachment: formData.attachment,
     }
 
     dispatch(addRequest(newRequest))
-    setShowModal(false)
-    setFormData({ type: 'Annual Leave', startDate: '', endDate: '', reason: '' })
+    setShowNewModal(false)
+    setFormData({ 
+      employee: '', 
+      timeOffType: 'Paid time off', 
+      startDate: '', 
+      endDate: '', 
+      allocation: '',
+      attachment: null 
+    })
   }
 
-  const handleApprove = (id) => {
-    dispatch(updateStatus({ id, status: 'Approved' }))
+  // Filter requests by role
+  const getFilteredRequests = () => {
+    // HR/Admin see all requests; Employees and Payroll Officers see only their own
+    let filtered = isSelfScopedUser 
+      ? requests.filter(r => r.employeeId === currentUser.id)
+      : requests
+
+    // Filter by search
+    if (searchTerm) {
+      filtered = filtered.filter(r => 
+        r.employeeName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    return filtered
   }
 
-  const handleReject = (id) => {
-    dispatch(updateStatus({ id, status: 'Rejected' }))
-  }
+  const filteredRequests = getFilteredRequests()
+
+  // Calculate available days
+  const paidDaysAvailable = 24
+  const sickDaysAvailable = 7
+  const unpaidDaysAvailable = 10
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Leave Management</h1>
-          <p className="text-muted-foreground mt-1">Manage leave requests and balances</p>
-        </div>
-        <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
-          <Calendar size={18} />
-          Apply Leave
-        </Button>
+    <>
+      <PageHeader 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        showNewButton={true}
+        onNewClick={() => setShowNewModal(true)}
+      />
+
+      <div className="p-8">
+        <Card className="border-2">
+          <CardContent className="p-0">
+            {/* Stats Section */}
+            <div className="p-6 border-b bg-background">
+              <div className="flex gap-12">
+                <div>
+                  <h3 className="text-blue-600 font-semibold text-lg mb-2">Paid time Off</h3>
+                  <p className="text-2xl font-bold">{paidDaysAvailable} Days Available</p>
+                </div>
+                <div>
+                  <h3 className="text-blue-600 font-semibold text-lg mb-2">Sick Leave</h3>
+                  <p className="text-2xl font-bold">{sickDaysAvailable} Days Available</p>
+                </div>
+                <div>
+                  <h3 className="text-blue-600 font-semibold text-lg mb-2">Unpaid Leaves</h3>
+                  <p className="text-2xl font-bold">{unpaidDaysAvailable} Days Available</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 font-semibold text-sm">Name</th>
+                    <th className="text-left p-4 font-semibold text-sm">Start Date</th>
+                    <th className="text-left p-4 font-semibold text-sm">End Date</th>
+                    <th className="text-left p-4 font-semibold text-sm">Time off Type</th>
+                    <th className="text-left p-4 font-semibold text-sm">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-8 text-muted-foreground">
+                        No time off requests found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRequests.map((request) => (
+                      <tr key={request.id} className="border-b hover:bg-muted/30">
+                        <td className="p-4 text-sm">
+                          {request.employeeName || '[Emp Name]'}
+                        </td>
+                        <td className="p-4 text-sm">
+                          {new Date(request.startDate).toLocaleDateString('en-GB')}
+                        </td>
+                        <td className="p-4 text-sm">
+                          {new Date(request.endDate).toLocaleDateString('en-GB')}
+                        </td>
+                        <td className="p-4 text-sm">
+                          <span className="text-blue-600">{request.type}</span>
+                        </td>
+                        <td className="p-4 text-sm">
+                          {isHROrAdmin && request.status === 'Pending' ? (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleReject(request.id)}
+                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                              >
+                                ✕
+                              </button>
+                              <button
+                                onClick={() => handleApprove(request.id)}
+                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+                              >
+                                ✓
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={`text-sm ${
+                              request.status === 'Approved' ? 'text-green-600' : 
+                              request.status === 'Rejected' ? 'text-red-600' :
+                              'text-yellow-600'
+                            }`}>
+                              {request.status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Leave Balance */}
-      {currentUser?.role === 'Employee' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Annual Leave</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{balance.annual} days</p>
-              <p className="text-xs text-muted-foreground mt-1">Available</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Sick Leave</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{balance.sick} days</p>
-              <p className="text-xs text-muted-foreground mt-1">Available</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Casual Leave</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{balance.casual} days</p>
-              <p className="text-xs text-muted-foreground mt-1">Available</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-2 items-center">
-            <Filter size={18} />
-            <span className="text-sm font-medium">Filter by status:</span>
-            {['All', 'Pending', 'Approved', 'Rejected'].map((status) => (
-              <Button
-                key={status}
-                variant={filter === status ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter(status)}
-              >
-                {status}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Leave Requests Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Leave Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {isHROrAdmin && <TableHead>Employee</TableHead>}
-                <TableHead>Type</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-                {isHROrAdmin && <TableHead>Actions</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRequests.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    No leave requests found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    {isHROrAdmin && <TableCell className="font-medium">{request.employeeName}</TableCell>}
-                    <TableCell>{request.type}</TableCell>
-                    <TableCell>{new Date(request.startDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(request.endDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{request.days}</TableCell>
-                    <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        request.status === 'Approved' ? 'success' :
-                        request.status === 'Pending' ? 'warning' :
-                        'destructive'
-                      }>
-                        {request.status}
-                      </Badge>
-                    </TableCell>
-                    {isHROrAdmin && (
-                      <TableCell>
-                        {request.status === 'Pending' && (
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleApprove(request.id)}>
-                              Approve
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleReject(request.id)}>
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Apply Leave Modal */}
-      {showModal && (
+      {/* New Time Off Request Modal */}
+      {showNewModal && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowModal(false)} />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
-            <Card>
-              <CardHeader>
-                <CardTitle>Apply for Leave</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <div 
+            className="fixed inset-0 bg-black/50 z-50" 
+            onClick={() => setShowNewModal(false)} 
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div 
+              className="w-full max-w-xl bg-card rounded-lg shadow-lg border-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b">
+                  <h2 className="text-xl font-bold">Time off Type Request</h2>
+                  <button
+                    onClick={() => setShowNewModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Leave Type</label>
+                  {/* Employee */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium w-32">Employee</label>
+                    <div className="flex-1 text-blue-600 font-medium">
+                      {isSelfScopedUser 
+                        ? `[${currentUser.first_name} ${currentUser.last_name}]`
+                        : (
+                          <Input
+                            value={formData.employee}
+                            onChange={(e) => setFormData({ ...formData, employee: e.target.value })}
+                            placeholder="[Employee]"
+                            className="text-blue-600"
+                            required
+                          />
+                        )
+                      }
+                    </div>
+                  </div>
+
+                  {/* Time off Type */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium w-32">Time off Type</label>
                     <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      value={formData.timeOffType}
+                      onChange={(e) => setFormData({ ...formData, timeOffType: e.target.value })}
+                      className="flex-1 px-3 py-2 border rounded-md bg-background text-blue-600 font-medium"
                       required
                     >
-                      <option>Annual Leave</option>
-                      <option>Sick Leave</option>
-                      <option>Casual Leave</option>
+                      <option value="Paid time off">[Paid time off]</option>
+                      <option value="Sick Leave">Sick Leave</option>
+                      <option value="Unpaid Leaves">Unpaid Leaves</option>
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Start Date</label>
-                    <Input
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      required
-                    />
+                  {/* Validity Period */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium w-32">Validity Period</label>
+                    <div className="flex-1 flex items-center gap-3">
+                      <Input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className="text-blue-600"
+                        required
+                      />
+                      <span className="text-sm font-medium">To</span>
+                      <Input
+                        type="date"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        className="text-blue-600"
+                        required
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">End Date</label>
-                    <Input
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      required
-                    />
+                  {/* Allocation */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium w-32">Allocation</label>
+                    <div className="flex-1 flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.allocation}
+                        onChange={(e) => setFormData({ ...formData, allocation: e.target.value })}
+                        placeholder="01.00"
+                        className="w-32 text-blue-600"
+                      />
+                      <span className="text-sm text-blue-600 font-medium">Days</span>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Reason</label>
-                    <textarea
-                      value={formData.reason}
-                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg min-h-[100px]"
-                      required
-                    />
+                  {/* Attachment */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium w-32">Attachment:</label>
+                    <div className="flex-1 flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        <Upload size={20} />
+                      </button>
+                      <span className="text-sm text-muted-foreground">
+                        (For sick leave certificate)
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2 justify-end">
-                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
-                      Cancel
+                  <div className="flex gap-3 justify-start pt-4">
+                    <Button 
+                      type="submit"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-6"
+                    >
+                      Submit
                     </Button>
-                    <Button type="submit">Submit Request</Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setShowNewModal(false)}
+                      className="px-6 bg-muted hover:bg-muted/80"
+                    >
+                      Discard
+                    </Button>
                   </div>
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </>
       )}
-    </div>
+    </>
   )
 }

@@ -26,7 +26,7 @@
     "has_manager": false,
     "user": {
       "login_id": "HRJODO20220001",
-      "role": "admin",
+      "role": "Admin",
       "is_first_login": false,
       "password": "password123"
     },
@@ -63,7 +63,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRJASM20220002",
-      "role": "hr",
+      "role": "HR Officer",
       "is_first_login": false,
       "password": "password123"
     },
@@ -100,7 +100,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRMIJO20220003",
-      "role": "payroll",
+      "role": "Payroll Officer",
       "is_first_login": false,
       "password": "password123"
     },
@@ -137,7 +137,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRSAWI20220004",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -174,7 +174,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRDABR20230005",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -211,7 +211,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HREMDA20230006",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -248,7 +248,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRROAN20230007",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -285,7 +285,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRLIMA20230008",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -322,7 +322,7 @@
     "has_manager": true,
     "user": {
       "login_id": "HRJAWI20220009",
-      "role": "employee",
+      "role": "Employee",
       "is_first_login": false,
       "password": "password123"
     },
@@ -331,5 +331,227 @@
       "id": "550e8400-e29b-41d4-a716-446655440103"
     },
     "position": "Financial Analyst"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "user_id": "550e8400-e29b-41d4-a716-446655440020",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440102",
+    "first_name": "Patricia",
+    "last_name": "Taylor",
+    "email": "patricia.taylor@hrx.com",
+    "phone": "+1 234-567-8909",
+    "location": "Miami",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440002",
+    "avatar_url": "https://ui-avatars.com/api/?name=Patricia+Taylor&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "HR Officer handling employee relations",
+    "interests": "Employee Engagement, Training",
+    "hobbies": "Swimming, Book Clubs",
+    "dob": "1990-12-05",
+    "nationality": "American",
+    "gender": "Female",
+    "marital_status": "Single",
+    "address": "741 Ocean Dr, Miami, FL 33101",
+    "date_of_joining": "2022-11-15",
+    "joining_serial": 10,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRPATA20221010",
+      "role": "HR Officer",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Human Resources",
+      "id": "550e8400-e29b-41d4-a716-446655440102"
+    },
+    "position": "HR Officer"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440011",
+    "user_id": "550e8400-e29b-41d4-a716-446655440021",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440101",
+    "first_name": "Michael",
+    "last_name": "Chen",
+    "email": "michael.chen@hrx.com",
+    "phone": "+1 234-567-8910",
+    "location": "San Jose",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440001",
+    "avatar_url": "https://ui-avatars.com/api/?name=Michael+Chen&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Full Stack Developer with React and Node expertise",
+    "interests": "Modern JavaScript, Cloud Architecture",
+    "hobbies": "Basketball, Coding Challenges",
+    "dob": "1993-02-28",
+    "nationality": "American",
+    "gender": "Male",
+    "marital_status": "Single",
+    "address": "258 Silicon Valley Blvd, San Jose, CA 95101",
+    "date_of_joining": "2023-07-01",
+    "joining_serial": 11,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRMICH20230011",
+      "role": "Employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "IT",
+      "id": "550e8400-e29b-41d4-a716-446655440101"
+    },
+    "position": "Full Stack Developer"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440012",
+    "user_id": "550e8400-e29b-41d4-a716-446655440022",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440105",
+    "first_name": "Amanda",
+    "last_name": "Rodriguez",
+    "email": "amanda.rodriguez@hrx.com",
+    "phone": "+1 234-567-8911",
+    "location": "Denver",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440006",
+    "avatar_url": "https://ui-avatars.com/api/?name=Amanda+Rodriguez&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Sales Representative focusing on B2B clients",
+    "interests": "Client Relations, Negotiation",
+    "hobbies": "Skiing, Wine Tasting",
+    "dob": "1996-06-14",
+    "nationality": "American",
+    "gender": "Female",
+    "marital_status": "Single",
+    "address": "963 Mountain Rd, Denver, CO 80201",
+    "date_of_joining": "2023-09-05",
+    "joining_serial": 12,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRAMRO20230012",
+      "role": "Employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Sales",
+      "id": "550e8400-e29b-41d4-a716-446655440105"
+    },
+    "position": "Sales Representative"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440013",
+    "user_id": "550e8400-e29b-41d4-a716-446655440023",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440103",
+    "first_name": "Kevin",
+    "last_name": "Thompson",
+    "email": "kevin.thompson@hrx.com",
+    "phone": "+1 234-567-8912",
+    "location": "Portland",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440003",
+    "avatar_url": "https://ui-avatars.com/api/?name=Kevin+Thompson&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Payroll Officer managing employee compensation and benefits",
+    "interests": "Compensation Analysis, Benefits Administration",
+    "hobbies": "Fishing, Woodworking",
+    "dob": "1987-09-17",
+    "nationality": "American",
+    "gender": "Male",
+    "marital_status": "Married",
+    "address": "147 Finance Plaza, Portland, OR 97201",
+    "date_of_joining": "2021-10-20",
+    "joining_serial": 13,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRKETH20210013",
+      "role": "Payroll Officer",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Finance",
+      "id": "550e8400-e29b-41d4-a716-446655440103"
+    },
+    "position": "Payroll Officer"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440014",
+    "user_id": "550e8400-e29b-41d4-a716-446655440024",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440104",
+    "first_name": "Rachel",
+    "last_name": "Green",
+    "email": "rachel.green@hrx.com",
+    "phone": "+1 234-567-8913",
+    "location": "Phoenix",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440004",
+    "avatar_url": "https://ui-avatars.com/api/?name=Rachel+Green&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Digital Marketing Manager",
+    "interests": "Social Media Marketing, Analytics",
+    "hobbies": "Painting, Yoga",
+    "dob": "1991-03-20",
+    "nationality": "American",
+    "gender": "Female",
+    "marital_status": "Single",
+    "address": "852 Desert Ave, Phoenix, AZ 85001",
+    "date_of_joining": "2022-04-12",
+    "joining_serial": 14,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRRAGR20220014",
+      "role": "Employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Marketing",
+      "id": "550e8400-e29b-41d4-a716-446655440104"
+    },
+    "position": "Digital Marketing Manager"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440015",
+    "user_id": "550e8400-e29b-41d4-a716-446655440025",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440101",
+    "first_name": "Brian",
+    "last_name": "Murphy",
+    "email": "brian.murphy@hrx.com",
+    "phone": "+1 234-567-8914",
+    "location": "Atlanta",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440001",
+    "avatar_url": "https://ui-avatars.com/api/?name=Brian+Murphy&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "DevOps Engineer automating deployment pipelines",
+    "interests": "CI/CD, Kubernetes, Docker",
+    "hobbies": "Mountain Biking, Craft Beer",
+    "dob": "1992-08-08",
+    "nationality": "American",
+    "gender": "Male",
+    "marital_status": "Married",
+    "address": "456 Tech Street, Atlanta, GA 30301",
+    "date_of_joining": "2023-03-22",
+    "joining_serial": 15,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRBRMU20230015",
+      "role": "Employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "IT",
+      "id": "550e8400-e29b-41d4-a716-446655440101"
+    },
+    "position": "DevOps Engineer"
   }
 ]
