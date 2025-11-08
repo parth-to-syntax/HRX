@@ -1,0 +1,57 @@
+[
+  {
+    "id": "PAY001",
+    "employeeId": "EMP001",
+    "employeeName": "John Doe",
+    "month": "October 2025",
+    "basicSalary": 5000,
+    "allowances": 1500,
+    "deductions": 650,
+    "netPay": 5850,
+    "status": "Paid"
+  },
+  {
+    "id": "PAY002",
+    "employeeId": "EMP002",
+    "employeeName": "Jane Smith",
+    "month": "October 2025",
+    "basicSalary": 4500,
+    "allowances": 1200,
+    "deductions": 570,
+    "netPay": 5130,
+    "status": "Paid"
+  },
+  {
+    "id": "PAY003",
+    "employeeId": "EMP003",
+    "employeeName": "Mike Johnson",
+    "month": "October 2025",
+    "basicSalary": 4000,
+    "allowances": 1000,
+    "deductions": 500,
+    "netPay": 4500,
+    "status": "Paid"
+  },
+  {
+    "id": "PAY004",
+    "employeeId": "EMP004",
+    "employeeName": "Sarah Williams",
+    "month": "October 2025",
+    "basicSalary": 3500,
+    "allowances": 800,
+    "deductions": 430,
+    "netPay": 3870,
+    "status": "Paid"
+  },
+  {
+    "id": "PAY005",
+    "employeeId": "EMP005",
+    "employeeName": "David Brown",
+    "month": "October 2025",
+    "basicSalary": 3000,
+    "allowances": 600,
+    "deductions": 360,
+    "netPay": 3240,
+    "status": "Pending"
+  }
+]
