@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { pool } from '../db.js';
+import { hasPermission } from '../utils/access.js';
 
 function parseCookie(header) {
   if (!header) return {};
@@ -31,5 +33,18 @@ export function rolesAllowed(...roles) {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Forbidden' });
     next();
+  };
+}
+
+export function permissionsAllowed(module, action) {
+  return async (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+      const allowed = await hasPermission(pool, req.user.company_id, req.user.role, module, action);
+      if (!allowed) return res.status(403).json({ error: 'Forbidden' });
+      next();
+    } catch (e) {
+      return res.status(500).json({ error: 'Permission check failed' });
+    }
   };
 }

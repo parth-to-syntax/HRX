@@ -81,6 +81,23 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 
 -----------------------------------------------------
+-- JOINING SERIAL COUNTERS (PER YEAR, GLOBAL)
+-----------------------------------------------------
+-- Maintains a single counter per calendar year to generate joining_serial
+-- Ensures unique serials per year even under concurrency via row locking
+CREATE TABLE IF NOT EXISTS joining_counters (
+    year INT PRIMARY KEY,
+    current_serial INT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Optional: Enforce uniqueness of (year, joining_serial) across employees
+-- This prevents duplicates if any out-of-band process inserts a conflicting serial
+-- Uses an expression index on EXTRACT(YEAR FROM date_of_joining)
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_join_year_serial
+ON employees ((EXTRACT(YEAR FROM date_of_joining)), joining_serial);
+
+-----------------------------------------------------
 -- BANK & ID DETAILS
 -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS bank_details (
@@ -131,6 +148,8 @@ CREATE TABLE IF NOT EXISTS attendance (
 );
 
 CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance (date);
+-- Ensure only one attendance row per employee per date
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_attendance_employee_date ON attendance (employee_id, date);
 
 -----------------------------------------------------
 -- LEAVE TYPES
@@ -267,4 +286,19 @@ CREATE TABLE IF NOT EXISTS password_resets (
     expires_at TIMESTAMPTZ NOT NULL,
     used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-----------------------------------------------------
+-- ACCESS RIGHTS (ADMIN CONFIGURABLE)
+-----------------------------------------------------
+-- Allows admin to configure per-role, per-module permissions (company scoped)
+-- Example modules: employees, salary, attendance, leaves, payroll, settings
+-- permissions JSON can include flags: view, create, update, delete, manage
+CREATE TABLE IF NOT EXISTS access_rights (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+    role VARCHAR(20) CHECK (role IN ('admin','hr','employee','payroll')) NOT NULL,
+    module VARCHAR(50) NOT NULL,
+    permissions JSONB NOT NULL,
+    UNIQUE (company_id, role, module)
 );

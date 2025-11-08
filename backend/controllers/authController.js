@@ -29,23 +29,55 @@ function setAuthCookie(res, token) {
 export async function registerEmployee(req, res) {
   // Accessible by admin/hr only (enforced by route middleware)
   try {
-    const { first_name, last_name, email, role = 'employee', company_id, date_of_joining, joining_serial } = req.body;
-    if (!company_id || !date_of_joining || !joining_serial) {
-      return res.status(400).json({ error: 'company_id, date_of_joining, joining_serial required' });
+    const { first_name, last_name, email, role = 'employee', company_id, date_of_joining } = req.body;
+    if (!company_id || !date_of_joining) {
+      return res.status(400).json({ error: 'company_id and date_of_joining are required' });
     }
-    const login_id = generateLoginId(first_name, last_name, date_of_joining, joining_serial);
-    const tempPassword = crypto.randomBytes(6).toString('hex');
-    const password_hash = await bcrypt.hash(tempPassword, rounds);
 
-    const userInsert = `INSERT INTO users (login_id, password_hash, role, company_id) VALUES ($1,$2,$3,$4) RETURNING id, role, company_id`;
-    const userResult = await pool.query(userInsert, [login_id, password_hash, role, company_id]);
-    const userId = userResult.rows[0].id;
+    // Start a transaction to safely generate a new joining_serial per year
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    const empInsert = `INSERT INTO employees (user_id, company_id, first_name, last_name, email, date_of_joining, joining_serial) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`;
-    await pool.query(empInsert, [userId, company_id, first_name, last_name, email, date_of_joining, joining_serial]);
+      const year = new Date(date_of_joining).getFullYear();
 
-    // Return temp password for MVP (normally email it)
-    res.status(201).json({ login_id, temp_password: tempPassword });
+      // Lock the row for the year to avoid race conditions; create if missing
+      // Upsert pattern: try update; if no row, insert then update again
+      const upsertCounter = `
+        INSERT INTO joining_counters (year, current_serial)
+        VALUES ($1, 0)
+        ON CONFLICT (year) DO NOTHING
+      `;
+      await client.query(upsertCounter, [year]);
+
+      // Increment and fetch the new serial atomically
+      const { rows: counterRows } = await client.query(
+        'UPDATE joining_counters SET current_serial = current_serial + 1, updated_at = NOW() WHERE year = $1 RETURNING current_serial',
+        [year]
+      );
+      const joining_serial = counterRows[0].current_serial;
+
+      const login_id = generateLoginId(first_name, last_name, date_of_joining, joining_serial);
+      const tempPassword = crypto.randomBytes(6).toString('hex');
+      const password_hash = await bcrypt.hash(tempPassword, rounds);
+
+      const userInsert = `INSERT INTO users (login_id, password_hash, role, company_id) VALUES ($1,$2,$3,$4) RETURNING id, role, company_id`;
+      const userResult = await client.query(userInsert, [login_id, password_hash, role, company_id]);
+      const userId = userResult.rows[0].id;
+
+      const empInsert = `INSERT INTO employees (user_id, company_id, first_name, last_name, email, date_of_joining, joining_serial) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`;
+      await client.query(empInsert, [userId, company_id, first_name, last_name, email, date_of_joining, joining_serial]);
+
+      await client.query('COMMIT');
+
+      // Return temp password for MVP (normally email it)
+      res.status(201).json({ login_id, temp_password: tempPassword });
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Registration failed', detail: e.message });
