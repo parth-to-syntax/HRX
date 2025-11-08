@@ -6,16 +6,11 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
-      <div
-        className="transition-all duration-300"
-        style={{
-          marginLeft: sidebarOpen ? '256px' : '80px',
-        }}
-      >
-        <main className="p-6">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

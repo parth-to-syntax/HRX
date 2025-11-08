@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, User as UserIcon } from 'lucide-react'
+import { Search, LogOut, User as UserIcon, Plane } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import Logo from '@/components/ui/Logo'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '@/redux/slices/userSlice'
 
@@ -13,7 +12,9 @@ export default function PageHeader({
   setSearchTerm, 
   showNewButton = false, 
   onNewClick,
-  showCompanyLogo = true
+  showCompanyLogo = false,
+  userStatus = null,
+  onStatusClick = null
 }) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -30,27 +31,33 @@ export default function PageHeader({
     setShowProfileMenu(false)
   }
 
+  // Get user name for display
+  const userName = currentUser?.first_name 
+    ? `${currentUser.first_name} ${currentUser.last_name}`
+    : currentUser?.name || 'User'
+
   return (
-    <div className="flex items-center justify-between gap-4 mb-6 bg-card border rounded-lg h-16 px-4">
-      {/* Left: Company Name & Logo (only if showCompanyLogo is true) */}
-      {showCompanyLogo && (
-        <div className="flex items-center">
-          <Logo className="h-8 w-auto text-primary" />
-        </div>
-      )}
+    <div className="flex items-center justify-between gap-4 bg-card border-b h-16 px-4">
+      {/* Left: User Name */}
+      <div className="flex-1">
+        <h2 className="text-lg font-semibold">{userName}</h2>
+        <p className="text-xs text-muted-foreground capitalize">
+          {currentUser?.user?.role || currentUser?.role || 'Employee'}
+        </p>
+      </div>
 
-      {/* Center: NEW button */}
-      {showNewButton && (
-        <Button 
-          onClick={onNewClick}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 font-semibold h-10"
-        >
-          NEW
-        </Button>
-      )}
+      {/* Right: Controls */}
+      <div className="flex items-center gap-3">
+        {/* Center: NEW button */}
+        {showNewButton && (
+          <Button 
+            onClick={onNewClick}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-8 font-semibold h-10"
+          >
+            NEW
+          </Button>
+        )}
 
-      {/* Right: Search and Profile - aligned to the right edge */}
-      <div className="flex items-center gap-3 ml-auto">
         <div className="relative w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -107,8 +114,35 @@ export default function PageHeader({
           </AnimatePresence>
         </div>
 
-        {/* Blue square */}
-        <button className="w-10 h-10 rounded bg-blue-600 hover:bg-blue-700 transition-colors"></button>
+        {/* User Status Indicator */}
+        {userStatus && (
+          <button 
+            onClick={onStatusClick}
+            disabled={userStatus === 'on-leave'}
+            className={`flex items-center gap-2 px-4 py-2 bg-muted/30 rounded-lg border transition-all ${
+              userStatus === 'on-leave' 
+                ? 'cursor-not-allowed opacity-60' 
+                : 'hover:bg-muted/50 hover:scale-105 cursor-pointer'
+            }`}
+          >
+            {userStatus === 'on-leave' ? (
+              <>
+                <Plane className="w-4 h-4 text-purple-500" />
+                <span className="text-sm font-medium">On Leave</span>
+              </>
+            ) : userStatus === 'checked-in' || userStatus === 'checked-out' ? (
+              <>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-sm font-medium">Present</span>
+              </>
+            ) : (
+              <>
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="text-sm font-medium">Absent</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 [
   {
     "id": "ATT001",
-    "employeeId": "EMP001",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440001",
     "employeeName": "John Doe",
     "date": "2025-11-08",
     "checkIn": "09:00",
@@ -11,17 +11,17 @@
   },
   {
     "id": "ATT002",
-    "employeeId": "EMP002",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440002",
     "employeeName": "Jane Smith",
     "date": "2025-11-08",
     "checkIn": "08:45",
-    "checkOut": "17:30",
+    "checkOut": null,
     "status": "Present",
-    "hours": 8.75
+    "hours": null
   },
   {
     "id": "ATT003",
-    "employeeId": "EMP001",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440001",
     "employeeName": "John Doe",
     "date": "2025-11-07",
     "checkIn": "09:15",
@@ -31,7 +31,7 @@
   },
   {
     "id": "ATT004",
-    "employeeId": "EMP004",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440004",
     "employeeName": "Sarah Williams",
     "date": "2025-11-07",
     "checkIn": "09:00",
@@ -41,12 +41,42 @@
   },
   {
     "id": "ATT005",
-    "employeeId": "EMP005",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440005",
     "employeeName": "David Brown",
     "date": "2025-11-06",
     "checkIn": "10:30",
     "checkOut": "18:00",
     "status": "Late",
     "hours": 7.5
+  },
+  {
+    "id": "ATT006",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440003",
+    "employeeName": "Mike Johnson",
+    "date": "2025-11-08",
+    "checkIn": "08:30",
+    "checkOut": "17:30",
+    "status": "Present",
+    "hours": 9
+  },
+  {
+    "id": "ATT007",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440007",
+    "employeeName": "Robert Anderson",
+    "date": "2025-11-08",
+    "checkIn": "09:00",
+    "checkOut": null,
+    "status": "Present",
+    "hours": null
+  },
+  {
+    "id": "ATT008",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440009",
+    "employeeName": "James Wilson",
+    "date": "2025-11-08",
+    "checkIn": "08:45",
+    "checkOut": "18:15",
+    "status": "Present",
+    "hours": 9.5
   }
 ]

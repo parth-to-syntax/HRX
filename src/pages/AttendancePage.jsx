@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { markAttendance } from '@/redux/slices/attendanceSlice'
 import PageHeader from '@/components/layout/PageHeader'
+import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
 
 export default function AttendancePage() {
   const dispatch = useDispatch()
@@ -14,6 +15,8 @@ export default function AttendancePage() {
   const { records, todayStatus } = useSelector((state) => state.attendance)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
   const [searchTerm, setSearchTerm] = useState('')
+
+  const currentUserStatus = useEmployeeStatus(currentUser?.id)
 
   const userRecords = currentUser?.role === 'Employee' 
     ? records.filter(r => r.employeeId === currentUser.id)
@@ -39,18 +42,19 @@ export default function AttendancePage() {
   const canCheckOut = todayStatus?.checkIn && !todayStatus?.checkOut
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Page Header */}
       <PageHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         showNewButton={false}
-        showCompanyLogo={false}
+        userStatus={currentUserStatus}
       />
 
-      {/* Quick Actions */}
-      {currentUser?.role === 'Employee' && (
-        <Card>
+      <div className="p-6 space-y-6">
+        {/* Quick Actions */}
+        {currentUser?.role === 'Employee' && (
+          <Card>
           <CardHeader>
             <CardTitle>Mark Attendance</CardTitle>
           </CardHeader>
@@ -162,6 +166,7 @@ export default function AttendancePage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

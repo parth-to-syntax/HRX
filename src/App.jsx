@@ -11,7 +11,7 @@ import PayrollPage from './pages/PayrollPage'
 import EmployeeDirectory from './pages/EmployeeDirectory'
 import ReportsAnalytics from './pages/ReportsAnalytics'
 import SettingsPage from './pages/SettingsPage'
-import UserProfile from './pages/UserProfile'
+import ProfilePage from './pages/ProfilePage'
 import CustomCursor from './components/ui/CustomCursor'
 import './index.css'
 
@@ -52,7 +52,7 @@ function AppRoutes() {
         <Route path="payroll" element={<PayrollPage />} />
         <Route path="reports" element={<ReportsAnalytics />} />
         <Route path="settings" element={<SettingsPage />} />
-        <Route path="profile" element={<UserProfile />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

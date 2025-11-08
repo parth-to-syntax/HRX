@@ -220,5 +220,116 @@
       "id": "550e8400-e29b-41d4-a716-446655440105"
     },
     "position": "Sales Executive"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440007",
+    "user_id": "550e8400-e29b-41d4-a716-446655440017",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440101",
+    "first_name": "Robert",
+    "last_name": "Anderson",
+    "email": "robert.anderson@hrx.com",
+    "phone": "+1 234-567-8906",
+    "location": "Boston",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440001",
+    "avatar_url": "https://ui-avatars.com/api/?name=Robert+Anderson&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Backend Developer specializing in Node.js",
+    "interests": "API Development, Microservices",
+    "hobbies": "Chess, Hiking",
+    "dob": "1991-11-30",
+    "nationality": "American",
+    "gender": "Male",
+    "marital_status": "Single",
+    "address": "147 Tech Park, Boston, MA 02101",
+    "date_of_joining": "2023-02-14",
+    "joining_serial": 7,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRROAN20230007",
+      "role": "employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "IT",
+      "id": "550e8400-e29b-41d4-a716-446655440101"
+    },
+    "position": "Backend Developer"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440008",
+    "user_id": "550e8400-e29b-41d4-a716-446655440018",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440104",
+    "first_name": "Lisa",
+    "last_name": "Martinez",
+    "email": "lisa.martinez@hrx.com",
+    "phone": "+1 234-567-8907",
+    "location": "Austin",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440002",
+    "avatar_url": "https://ui-avatars.com/api/?name=Lisa+Martinez&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Content Marketing Specialist",
+    "interests": "Content Strategy, SEO",
+    "hobbies": "Writing, Traveling",
+    "dob": "1994-04-18",
+    "nationality": "American",
+    "gender": "Female",
+    "marital_status": "Married",
+    "address": "852 Marketing Ave, Austin, TX 78701",
+    "date_of_joining": "2023-06-20",
+    "joining_serial": 8,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRLIMA20230008",
+      "role": "employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Marketing",
+      "id": "550e8400-e29b-41d4-a716-446655440104"
+    },
+    "position": "Content Marketing Specialist"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440009",
+    "user_id": "550e8400-e29b-41d4-a716-446655440019",
+    "company_id": "550e8400-e29b-41d4-a716-446655440000",
+    "department_id": "550e8400-e29b-41d4-a716-446655440103",
+    "first_name": "James",
+    "last_name": "Wilson",
+    "email": "james.wilson@hrx.com",
+    "phone": "+1 234-567-8908",
+    "location": "Seattle",
+    "manager_id": "550e8400-e29b-41d4-a716-446655440001",
+    "avatar_url": "https://ui-avatars.com/api/?name=James+Wilson&background=0d9488&color=fff",
+    "resume_url": null,
+    "about_job": "Financial Analyst",
+    "interests": "Financial Modeling, Investment",
+    "hobbies": "Stock Trading, Tennis",
+    "dob": "1989-07-22",
+    "nationality": "American",
+    "gender": "Male",
+    "marital_status": "Married",
+    "address": "369 Finance St, Seattle, WA 98101",
+    "date_of_joining": "2022-09-10",
+    "joining_serial": 9,
+    "has_bank_account": true,
+    "has_manager": true,
+    "user": {
+      "login_id": "HRJAWI20220009",
+      "role": "employee",
+      "is_first_login": false,
+      "password": "password123"
+    },
+    "department": {
+      "name": "Finance",
+      "id": "550e8400-e29b-41d4-a716-446655440103"
+    },
+    "position": "Financial Analyst"
   }
 ]
