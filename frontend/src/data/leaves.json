@@ -1,0 +1,86 @@
+[
+  {
+    "id": "LV001",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440001",
+    "employeeName": "John Doe",
+    "type": "Annual Leave",
+    "startDate": "2025-11-15",
+    "endDate": "2025-11-20",
+    "days": 6,
+    "reason": "Family vacation",
+    "status": "Approved",
+    "appliedOn": "2025-10-28"
+  },
+  {
+    "id": "LV002",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440004",
+    "employeeName": "Sarah Williams",
+    "type": "Sick Leave",
+    "startDate": "2025-11-08",
+    "endDate": "2025-11-08",
+    "days": 1,
+    "reason": "Flu symptoms",
+    "status": "Approved",
+    "appliedOn": "2025-11-07"
+  },
+  {
+    "id": "LV003",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440005",
+    "employeeName": "David Brown",
+    "type": "Casual Leave",
+    "startDate": "2025-11-12",
+    "endDate": "2025-11-12",
+    "days": 1,
+    "reason": "Personal work",
+    "status": "Pending",
+    "appliedOn": "2025-11-07"
+  },
+  {
+    "id": "LV004",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440006",
+    "employeeName": "Emily Davis",
+    "type": "Annual Leave",
+    "startDate": "2025-10-20",
+    "endDate": "2025-10-25",
+    "days": 6,
+    "reason": "Wedding to attend",
+    "status": "Approved",
+    "appliedOn": "2025-10-01"
+  },
+  {
+    "id": "LV005",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440002",
+    "employeeName": "Jane Smith",
+    "type": "Sick Leave",
+    "startDate": "2025-09-15",
+    "endDate": "2025-09-15",
+    "days": 1,
+    "reason": "Medical appointment",
+    "status": "Rejected",
+    "appliedOn": "2025-09-14"
+  },
+  {
+    "id": "LV006",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440008",
+    "employeeName": "Lisa Martinez",
+    "type": "Annual Leave",
+    "startDate": "2025-11-08",
+    "endDate": "2025-11-08",
+    "days": 1,
+    "reason": "Personal day off",
+    "status": "Approved",
+    "appliedOn": "2025-11-05"
+  },
+  {
+    "id": "LV007",
+    "employeeId": "550e8400-e29b-41d4-a716-446655440006",
+    "employeeName": "Emily Davis",
+    "type": "Sick Leave",
+    "startDate": "2025-11-08",
+    "endDate": "2025-11-09",
+    "days": 2,
+    "reason": "Doctor's appointment",
+    "status": "Approved",
+    "appliedOn": "2025-11-07"
+  }
+]
