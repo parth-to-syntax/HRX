@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,14 +9,19 @@ import { Edit, Plus, Clock, Camera, CheckCircle, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import PasswordManagementModal from '@/components/modals/PasswordManagementModal'
 import FaceEnrollmentModal from '@/components/modals/FaceEnrollmentModal'
+import UserAvatar from '@/components/ui/UserAvatar'
 import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
 import toast from 'react-hot-toast'
 import { getMyProfile, getMyPrivateInfo, updateMyProfile, updateMyPrivateInfo, listMySkills, addMySkill, deleteMySkill, listMyCerts, addMyCert, deleteMyCert } from '@/api/employees'
 import { getMyAttendance } from '@/api/attendance'
 import { getMyEnrollment, deleteMyEnrollment } from '@/api/face'
+import { uploadAvatar, deleteAvatar } from '@/api/upload'
+import { updateAvatar } from '@/redux/slices/userSlice'
 
 export default function ProfilePage() {
+  const dispatch = useDispatch()
   const { currentUser } = useSelector((state) => state.user)
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('resume')
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -25,10 +31,11 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isAdminOnly, setIsAdminOnly] = useState(false) // Admin without employee profile
   
   const currentUserStatus = useEmployeeStatus(currentUser?.id)
 
-  const isAdminOrPayroll = ['admin', 'payroll officer'].includes(
+  const isAdminOrPayroll = ['admin', 'payroll'].includes(
     (currentUser?.user?.role || currentUser?.role || '').toLowerCase()
   )
 
@@ -147,16 +154,51 @@ export default function ProfilePage() {
     }
   }
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    try {
+      // Show preview immediately
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result)
-        // In real app, this would upload to server
-        console.log('Avatar uploaded:', file.name)
       }
       reader.readAsDataURL(file)
+
+      // Show loading toast
+      const loadingToast = toast.loading('Uploading profile photo...')
+
+      // Upload to backend
+      const result = await uploadAvatar(file)
+      
+      // Update Redux state (persists across all components)
+      dispatch(updateAvatar(result.avatar_url))
+      
+      // Dismiss loading and show success
+      toast.dismiss(loadingToast)
+      toast.success('Profile photo updated successfully!')
+      
+      console.log('✅ Avatar uploaded:', result.avatar_url)
+    } catch (error) {
+      console.error('Avatar upload error:', error)
+      toast.error(error.message || 'Failed to upload photo')
+      setAvatarPreview(null)
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    if (!confirm('Remove your profile photo?')) return
+
+    try {
+      await deleteAvatar()
+      dispatch(updateAvatar(null))
+      setAvatarPreview(null)
+      toast.success('Profile photo removed')
+      console.log('🗑️ Avatar removed')
+    } catch (error) {
+      console.error('Avatar delete error:', error)
+      toast.error(error.message || 'Failed to remove photo')
     }
   }
 
@@ -232,12 +274,17 @@ export default function ProfilePage() {
     }
   }
 
-  const tabs = [
-    { id: 'resume', label: 'Resume' },
-    { id: 'private', label: 'Private Info' },
-    ...(isAdminOrPayroll ? [{ id: 'salary', label: 'Salary Info' }] : []),
-    { id: 'security', label: 'Security' }
-  ]
+  const tabs = isAdminOnly 
+    ? [
+        { id: 'resume', label: 'Profile' },
+        { id: 'security', label: 'Security' }
+      ]
+    : [
+        { id: 'resume', label: 'Resume' },
+        { id: 'private', label: 'Private Info' },
+        ...(isAdminOrPayroll ? [{ id: 'salary', label: 'Salary Info' }] : []),
+        { id: 'security', label: 'Security' }
+      ]
 
   // Fetch profile, private info, skills, and certifications on mount
   useEffect(() => {
@@ -246,13 +293,44 @@ export default function ProfilePage() {
       setLoading(true)
       setError('')
       try {
+        // Try to fetch employee profile (will fail for admin without employee record)
         const [p, priv, sk, certs] = await Promise.all([
-          getMyProfile(),
+          getMyProfile().catch(() => null),
           getMyPrivateInfo().catch(() => null),
           listMySkills().catch(() => []),
           listMyCerts().catch(() => []),
         ])
         if (!mounted) return
+        
+        // If no employee profile found (admin user), use basic user data
+        if (!p) {
+          setIsAdminOnly(true)
+          const userName = currentUser?.name || currentUser?.first_name 
+            ? `${currentUser?.first_name || ''} ${currentUser?.last_name || ''}`.trim()
+            : currentUser?.email || 'User'
+          
+          setProfileData(prev => ({
+            ...prev,
+            name: userName,
+            loginId: currentUser?.user?.login_id || currentUser?.login_id || currentUser?.username || '',
+            email: currentUser?.email || currentUser?.user?.email || '',
+            mobile: '',
+            company: currentUser?.company_id ? `Company ${currentUser.company_id}` : '',
+            department: '',
+            manager: '',
+            location: '',
+            about: '',
+            whatILove: '',
+            interests: '',
+            hobbies: '',
+            dateOfJoining: ''
+          }))
+          setLoading(false)
+          return
+        }
+        
+        setIsAdminOnly(false)
+        
         const fullName = (p?.first_name || p?.last_name)
           ? `${p.first_name || ''} ${p.last_name || ''}`.trim()
           : (currentUser?.name || p?.email || 'My Name')
@@ -388,13 +466,14 @@ export default function ProfilePage() {
             <div className="flex items-start gap-6">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center">
-                  <img
-                    src={avatarPreview || currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${profileData.name}&background=ec4899&color=fff&size=128`}
-                    alt={profileData.name}
-                    className="w-32 h-32 rounded-full object-cover"
-                  />
-                </div>
+                <UserAvatar 
+                  user={{
+                    ...currentUser,
+                    avatar_url: avatarPreview || currentUser?.avatar_url
+                  }}
+                  size="3xl"
+                  className="border-4 border-white shadow-xl"
+                />
                 <input
                   type="file"
                   id="avatar-upload"
@@ -404,10 +483,20 @@ export default function ProfilePage() {
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center text-white shadow-lg cursor-pointer"
+                  className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center text-white shadow-lg cursor-pointer transition-colors"
+                  title="Change profile photo"
                 >
-                  <Edit size={18} />
+                  <Camera size={18} />
                 </label>
+                {currentUser?.avatar_url && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    className="absolute top-0 left-0 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white shadow-lg transition-colors"
+                    title="Remove profile photo"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Profile Info */}
@@ -453,20 +542,26 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Total Worked Hours */}
-        <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-blue-500/20">
-                <Clock className="h-8 w-8 text-blue-500" />
+        {/* Total Worked Hours - Only show for employees */}
+        {!isAdminOnly && (
+          <Card 
+            className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+            onClick={() => navigate('/attendance')}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-blue-500/20">
+                  <Clock className="h-8 w-8 text-blue-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-1">Total Worked Hours (This Month)</p>
+                  <p className="text-3xl font-bold">{totalWorkedHours.toFixed(2)} hrs</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Click to view attendance details →</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Worked Hours (This Month)</p>
-                <p className="text-3xl font-bold">{totalWorkedHours.toFixed(2)} hrs</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tabs */}
         <div className="border-b">

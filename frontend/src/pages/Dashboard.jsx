@@ -47,7 +47,7 @@ export default function Dashboard() {
     dispatch(setEmployees(employeesData))
   }, [dispatch])
 
-  const isAdminOrHR = ['Admin', 'HR Officer'].includes(currentUser?.role)
+  const isAdminOrHR = ['admin', 'hr'].includes(currentUser?.role?.toLowerCase())
 
   // Calculate stats
   const totalEmployees = employees.length

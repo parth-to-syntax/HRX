@@ -69,6 +69,11 @@ export const userSlice = createSlice({
     updateProfile: (state, action) => {
       state.currentUser = { ...state.currentUser, ...action.payload }
     },
+    updateAvatar: (state, action) => {
+      if (state.currentUser) {
+        state.currentUser.avatar_url = action.payload
+      }
+    },
     toggleTheme: (state) => {
       state.theme = state.theme === 'light' ? 'dark' : 'light'
     },
@@ -93,5 +98,5 @@ export const userSlice = createSlice({
   },
 })
 
-export const { login, logout, updateProfile, toggleTheme } = userSlice.actions
+export const { login, logout, updateProfile, updateAvatar, toggleTheme } = userSlice.actions
 export default userSlice.reducer

@@ -64,3 +64,13 @@ export async function employeeCountReport(year) {
   const { data } = await api.get('/payroll/reports/employee-count', { params: { year } });
   return data;
 }
+
+export async function sendPayrunEmails(payrunId) {
+  const { data } = await api.post(`/payroll/payruns/${payrunId}/send-emails`);
+  return data; // { message, sent, failed, errors }
+}
+
+export async function sendSinglePayslipEmail(payslipId) {
+  const { data } = await api.post(`/payroll/payslips/${payslipId}/send-email`);
+  return data; // { message, email, messageId }
+}

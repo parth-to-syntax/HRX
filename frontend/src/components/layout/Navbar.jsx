@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Menu, Search, Bell, Moon, Sun, User, Settings, LogOut } from 'lucide-react'
 import UserStatusBadge from '@/components/ui/UserStatusBadge'
+import UserAvatar from '@/components/ui/UserAvatar'
 import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
 import { toggleTheme, performLogout } from '@/redux/slices/userSlice'
 import { Button } from '@/components/ui/button'
@@ -123,10 +124,9 @@ export default function Navbar({ onMenuClick }) {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors"
             >
-              <img
-                src={currentUser?.avatar || 'https://ui-avatars.com/api/?name=User'}
-                alt="Profile"
-                className="w-8 h-8 rounded-full"
+              <UserAvatar 
+                user={currentUser} 
+                size="sm"
               />
               <span className="hidden sm:block text-sm font-medium">{currentUser?.name}</span>
             </button>

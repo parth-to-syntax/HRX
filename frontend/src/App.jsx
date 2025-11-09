@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import Dashboard from './pages/Dashboard'
 import AttendancePage from './pages/AttendancePage'
+import AttendanceSimplePage from './pages/AttendanceSimplePage'
 import LeavePage from './pages/LeavePage'
 import PayrollPage from './pages/PayrollPage'
 import EmployeeDirectory from './pages/EmployeeDirectory'
@@ -65,7 +66,8 @@ function AppRoutes() {
       >
         <Route index element={<Navigate to="/dashboard/employees" replace />} />
         <Route path="employees" element={<EmployeeDirectory />} />
-        <Route path="attendance" element={<AttendancePage />} />
+  <Route path="attendance" element={<AttendancePage />} />
+  <Route path="attendance-simple" element={<AttendanceSimplePage />} />
         <Route path="leave" element={<LeavePage />} />
         <Route path="payroll" element={<PayrollPage />} />
         <Route path="reports" element={<ReportsAnalytics />} />
@@ -84,7 +86,7 @@ function App() {
       <PersistGate loading={<div className="p-6 text-sm">Loading...</div>} persistor={persistor}>
         <ThemeProvider>
           <Router>
-            <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+            <Toaster position="top-right" toastOptions={{ duration: 300 }} />
             <AppRoutes />
           </Router>
         </ThemeProvider>

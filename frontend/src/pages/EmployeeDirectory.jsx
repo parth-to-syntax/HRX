@@ -13,6 +13,7 @@ import { setEmployees } from '@/redux/slices/employeesSlice'
 import { listEmployees as listEmployeesApi } from '@/api/employees'
 import { listAttendanceByDate } from '@/api/attendance'
 import { getEmployeeSalary } from '@/api/salary'
+import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
 import toast from 'react-hot-toast'
 
 export default function EmployeeDirectory() {
@@ -31,8 +32,8 @@ export default function EmployeeDirectory() {
   const [loading, setLoading] = useState(false)
 
   const userRole = (currentUser?.user?.role || currentUser?.role || '').toLowerCase()
-  const isHROrAdmin = ['hr officer', 'admin'].includes(userRole)
-  const isHRAdminOrPayroll = ['hr officer', 'admin', 'payroll officer'].includes(userRole)
+  const isHROrAdmin = ['hr', 'admin'].includes(userRole)
+  const isHRAdminOrPayroll = ['hr', 'admin', 'payroll'].includes(userRole)
   const today = new Date().toISOString().split('T')[0]
 
   // Debug logging
@@ -57,10 +58,10 @@ export default function EmployeeDirectory() {
           if (!data.total || all.length >= data.total || (data.items || []).length === 0) break
           page += 1
         }
-        // Backend attendance overlay (admin/hr only)
+        // Backend attendance overlay (admin/hr/payroll only)
         let attendanceMap = new Map()
         const roleLower = (currentUser?.role || '').toLowerCase()
-        if (['admin','hr'].includes(roleLower)) {
+        if (['admin','hr','payroll'].includes(roleLower)) {
           try {
             const resp = await listAttendanceByDate({ date: today })
             attendanceMap = new Map(resp.items.map(r => [r.employee_id, r]))
@@ -200,8 +201,8 @@ export default function EmployeeDirectory() {
            emp.position?.toLowerCase().includes(searchLower)
   })
 
-  // Get current user's status
-  const currentUserStatus = currentUser?.id ? getEmployeeStatus(currentUser.id) : null
+  // Get current user's status using the consistent hook (only for employees, not admin/HR)
+  const currentUserStatus = useEmployeeStatus(!isHROrAdmin ? currentUser?.id : null)
 
   const handleCurrentUserStatusClick = () => {
     if (currentUser && currentUserStatus !== 'on-leave') {
@@ -256,8 +257,7 @@ export default function EmployeeDirectory() {
       <PageHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        showNewButton={isHROrAdmin}
-        onNewClick={() => setShowNewEmployeeModal(true)}
+        showNewButton={false}
         userStatus={currentUserStatus}
         onStatusClick={handleCurrentUserStatusClick}
       />
@@ -309,38 +309,38 @@ export default function EmployeeDirectory() {
                       {/* Status Text and Hours */}
                       <div className="mt-1">
                         {(() => {
-                          const backendStatus = employee.attendance_status
-                          const attendance = employee.attendance || getEmployeeAttendance(employee.id)
-                          const status = backendStatus || getEmployeeStatus(employee.id)
+                          // Use backend attendance data if available (for admin/hr)
+                          const attendance = employee.attendance
+                          const status = employee.attendance_status
                           
-                          if (status === 'leave' || status === 'on-leave') {
+                          if (status === 'leave') {
                             return (
-                              <span className="text-xs font-medium text-purple-600">
-                                On Leave
+                              <span className="text-xs font-medium text-purple-600 flex items-center gap-1">
+                                <Plane className="w-3 h-3" />
+                                Leave
                               </span>
                             )
-                          } else if ((status === 'checked-out' || status === 'absent')) {
-                            let hours = null
-                            if (employee.attendance && employee.attendance.work_hours != null) {
-                              hours = `${employee.attendance.work_hours}h`
-                            } else if (attendance?.checkIn && attendance?.checkOut) {
-                              hours = calculateHoursWorked(attendance.checkIn, attendance.checkOut)
-                            }
-                            return (
-                              <span className="text-xs font-medium text-red-600">
-                                Absent{hours ? ` • ${hours}` : ''}
-                              </span>
-                            )
-                          } else if (status === 'present' || status === 'checked-in') {
+                          } else if (status === 'present') {
+                            // Show work hours if available
+                            const hours = attendance?.work_hours != null 
+                              ? `${Number(attendance.work_hours).toFixed(1)}h` 
+                              : null
                             return (
                               <span className="text-xs font-medium text-green-600">
-                                Present
+                                Present{hours ? ` • ${hours}` : ''}
                               </span>
                             )
-                          } else {
+                          } else if (status === 'absent') {
                             return (
                               <span className="text-xs font-medium text-red-600">
                                 Absent
+                              </span>
+                            )
+                          } else {
+                            // No attendance data available
+                            return (
+                              <span className="text-xs font-medium text-gray-400">
+                                -
                               </span>
                             )
                           }

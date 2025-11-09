@@ -18,17 +18,17 @@ import { InteractiveCard } from '@/components/ui/interactive-card'
 
 const menuItems = [
   // Employees should be visible to everyone
-  { path: '/dashboard/employees', icon: Users, label: 'Employees', roles: ['Employee', 'HR Officer', 'Payroll Officer', 'Admin'] },
-  // Attendance for employees and HR/Admin
-  { path: '/dashboard/attendance', icon: Clock, label: 'Attendance', roles: ['Employee', 'HR Officer', 'Admin'] },
+  { path: '/dashboard/employees', icon: Users, label: 'Employees', roles: ['employee', 'hr', 'payroll', 'admin'] },
+  // Attendance for employees, HR, Payroll and Admin
+  { path: '/dashboard/attendance', icon: Clock, label: 'Attendance', roles: ['employee', 'hr', 'payroll', 'admin'] },
   // Time Off visible to Employee, HR, Payroll, Admin (HR/Admin approve all; others see only their own)
-  { path: '/dashboard/leave', icon: Calendar, label: 'Time Off', roles: ['Employee', 'HR Officer', 'Payroll Officer', 'Admin'] },
+  { path: '/dashboard/leave', icon: Calendar, label: 'Time Off', roles: ['employee', 'hr', 'payroll', 'admin'] },
   // Payroll visible only to Payroll Officer and Admin (as per requirements)
-  { path: '/dashboard/payroll', icon: DollarSign, label: 'Payroll', roles: ['Payroll Officer', 'Admin'] },
+  { path: '/dashboard/payroll', icon: DollarSign, label: 'Payroll', roles: ['payroll', 'admin'] },
   // Reports accessible only to HR, Payroll and Admin
-  { path: '/dashboard/reports', icon: FileText, label: 'Reports', roles: ['HR Officer', 'Payroll Officer', 'Admin'] },
+  { path: '/dashboard/reports', icon: FileText, label: 'Reports', roles: ['hr', 'payroll', 'admin'] },
   // Settings only Admin
-  { path: '/dashboard/settings', icon: Settings, label: 'Settings', roles: ['Admin'] },
+  { path: '/dashboard/settings', icon: Settings, label: 'Settings', roles: ['admin'] },
 ]
 
 export default function Sidebar({ isOpen, setIsOpen }) {

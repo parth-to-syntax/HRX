@@ -13,6 +13,7 @@ import {
   approveLeaveRequest,
   rejectLeaveRequest
 } from '@/api/leaves'
+import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
 import toast from 'react-hot-toast'
 
 export default function LeavePage() {
@@ -23,6 +24,8 @@ export default function LeavePage() {
   const [leaveTypes, setLeaveTypes] = useState([])
   const [myAllocations, setMyAllocations] = useState([])
   const [requests, setRequests] = useState([])
+  // Use the standardized employee status hook for consistent status across all modules
+  const userStatus = useEmployeeStatus(currentUser?.id)
   const [formData, setFormData] = useState({
     leave_type_id: '',
     startDate: '',
@@ -142,23 +145,53 @@ export default function LeavePage() {
         onSearchChange={setSearchTerm}
         showNewButton={true}
         onNewClick={() => setShowNewModal(true)}
+        userStatus={userStatus}
       />
 
       <div className="p-8">
         <Card className="border-2">
           <CardContent className="p-0">
-            {/* Stats Section - Only show for employees */}
-            {isEmployee && allocationsWithAvailable.length > 0 && (
+            {/* Leave Allocations Section */}
+            {isEmployee && (
               <div className="p-6 border-b bg-background">
-                <div className="flex gap-12 flex-wrap">
-                  {allocationsWithAvailable.map((allocation, idx) => (
-                    <div key={idx}>
-                      <h3 className="text-blue-600 font-semibold text-lg mb-2">{allocation.name}</h3>
-                      <p className="text-2xl font-bold">{allocation.available} / {allocation.total} Days Available</p>
-                      <p className="text-sm text-muted-foreground">{allocation.used} days used</p>
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <span>📊</span>
+                  <span>Your Leave Balance</span>
+                </h2>
+                {allocationsWithAvailable.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {allocationsWithAvailable.map((allocation, idx) => (
+                      <div key={idx} className="bg-card rounded-lg border p-6 hover:shadow-lg transition-all">
+                        <h3 className="text-lg font-semibold text-primary mb-4">{allocation.name}</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-sm text-muted-foreground">Available</span>
+                            <span className="text-3xl font-bold text-foreground">{allocation.available}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Total</span>
+                            <span className="font-semibold">{allocation.total} days</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Used</span>
+                            <span className="font-semibold text-destructive">{allocation.used} days</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2 mt-4">
+                            <div 
+                              className="bg-primary h-2 rounded-full transition-all" 
+                              style={{ width: `${allocation.total > 0 ? ((allocation.total - allocation.used) / allocation.total * 100) : 0}%` }}
+                            ></div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
+                ) : (
+                  <div className="bg-muted/50 border rounded-lg p-6 text-center">
+                    <p className="text-foreground font-medium">No leave allocations found</p>
+                    <p className="text-muted-foreground text-sm mt-2">Please contact HR to allocate leaves to your account</p>
+                  </div>
+                )}
               </div>
             )}
 
