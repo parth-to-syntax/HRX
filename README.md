@@ -1,102 +1,81 @@
 # HRX - Human Resource Management System
 
-A comprehensive, modern HRMS (Human Resource Management System) with facial recognition-based attendance, payroll processing, leave management, and employee self-service capabilities.
+Modern HRMS with facial recognition attendance, automated payroll, and complete employee management.
 
-## 🚀 Features
+**📁 [Project Resources & Documentation](https://drive.google.com/drive/u/0/folders/1rXy-fVDjCxwq9upabgJWAKxo2WtZnvA4)**
 
-### Core Modules
+## Features
 
-- **👤 Employee Management**
-  - Complete employee profiles with personal and professional details
-  - Auto-generated login IDs (OI format)
-  - Department and manager hierarchy
-  - Skills and certifications tracking
-  - Document management (resume, avatar)
+### Employee Management
+- Complete employee profiles with auto-generated OI format login IDs
+- Department hierarchy and manager assignments
+- Skills, certifications, and document management
+- Role-based access control (Admin, HR, Payroll, Employee)
 
-- **📸 Facial Recognition Attendance**
-  - Real-time face detection and recognition
-  - Webcam-based check-in/check-out
-  - Face descriptor storage and matching
-  - Automated absence marking for previous days
+### Facial Recognition Attendance
+- Real-time face detection and verification
+- Webcam-based check-in/check-out system
+- Automated absence marking for missing records
+- Work hours, breaks, and overtime tracking
 
-- **📅 Attendance Tracking**
-  - Daily attendance records (present, leave, absent)
-  - Work hours, break hours, and overtime calculation
-  - Automated absence marking for employees without attendance records
-  - Status tracking and reporting
+### Leave Management
+- Multiple leave types with configurable paid/unpaid status
+- HR-managed leave allocations with balance tracking
+- Employee self-service leave requests
+- Approval workflow integration with attendance
 
-- **🏖️ Leave Management**
-  - Multiple leave types (paid/unpaid)
-  - Leave allocation by HR
-  - Employee leave requests with approval workflow
-  - Leave balance tracking
-  - Integration with attendance and payroll
+### Payroll Processing
+- Automated monthly payrun generation
+- Attendance-based salary proration
+- Configurable earnings and deductions
+- PF calculation (employee + employer contributions)
+- Professional tax support
+- PDF payslip generation and yearly reports
+- Employer cost analytics
 
-- **💰 Payroll Processing**
-  - Monthly payrun generation
-  - Attendance-based salary proration
-  - Configurable salary components (earnings/deductions)
-  - PF (Provident Fund) calculation - Employee & Employer
-  - Professional Tax support
-  - Payslip generation with PDF export
-  - Yearly salary reports
-  - Employer cost analytics
+### Security
+- JWT authentication with httpOnly cookies
+- Bcrypt password hashing
+- First-login password reset
+- Token-based password recovery
+- Multi-company data isolation
 
-- **👨‍💼 Admin & Access Control**
-  - Role-based access (Admin, HR, Payroll, Employee)
-  - Configurable module-level permissions
-  - Multi-company support
-  - Company-scoped data isolation
+## Tech Stack
 
-- **🔐 Authentication & Security**
-  - JWT-based authentication with httpOnly cookies
-  - Bcrypt password hashing
-  - First-login password reset flow
-  - Forgot password with token-based reset
-  - Email notifications (optional)
+**Backend**
+- Node.js + Express.js (ES Modules)
+- PostgreSQL database
+- JWT + bcrypt authentication
+- Face-api.js for facial recognition
+- PDFKit for payslip generation
+- Nodemailer for emails
+- Cloudinary for file storage
 
-## 🛠️ Tech Stack
+**Frontend**
+- React 18 + Vite
+- Redux Toolkit for state management
+- Material-UI + Tailwind CSS
+- Recharts for analytics
+- Framer Motion for animations
+- Face-api.js + MediaPipe
+- Axios for API calls
 
-### Backend
-- **Runtime**: Node.js (ES Modules)
-- **Framework**: Express.js
-- **Database**: PostgreSQL with pg driver
-- **Authentication**: JWT + bcrypt
-- **Face Recognition**: @vladmandic/face-api, Canvas, Sharp
-- **PDF Generation**: PDFKit
-- **Email**: Nodemailer (optional)
-- **Cloud Storage**: Cloudinary (for avatars/documents)
+## Prerequisites
 
-### Frontend
-- **Framework**: React 18
-- **Build Tool**: Vite
-- **Routing**: React Router DOM v6
-- **State Management**: Redux Toolkit + Redux Persist
-- **UI Components**: Material-UI (MUI) + Tailwind CSS
-- **Charts**: Recharts, MUI X-Charts
-- **Data Grid**: MUI X-Data-Grid
-- **Animations**: Framer Motion, GSAP
-- **Face Recognition**: face-api.js, MediaPipe
-- **HTTP Client**: Axios
-- **Notifications**: React Hot Toast
-- **Date Handling**: date-fns
+- Node.js 18 or higher
+- PostgreSQL 12 or higher
+- npm or yarn
+- Webcam (for facial recognition)
 
-## 📋 Prerequisites
+## Installation
 
-- Node.js >= 18.x
-- PostgreSQL >= 12.x
-- npm or yarn package manager
-- Webcam (for facial recognition features)
-
-## 🔧 Installation
-
-### 1. Clone the Repository
+### Clone the Repository
 ```bash
 git clone <repository-url>
 cd master
 ```
 
-### 2. Backend Setup
+### Backend Setup
 
 ```bash
 cd backend
@@ -122,9 +101,9 @@ npm run seed:full
 npm run dev
 ```
 
-Backend will run on `http://localhost:3001`
+Backend runs on `http://localhost:3001`
 
-### 3. Frontend Setup
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -136,9 +115,9 @@ npm install
 npm run dev
 ```
 
-Frontend will run on `http://localhost:5173`
+Frontend runs on `http://localhost:5173`
 
-### 4. Python Face Recognition Service (Optional)
+### Python Service (Optional)
 
 ```bash
 cd python
@@ -150,7 +129,7 @@ pip install -r requirements.txt
 python faceRecognition.py
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Backend Environment Variables (.env)
 
@@ -198,45 +177,29 @@ The application uses PostgreSQL. The schema includes:
 
 Schema is automatically initialized with `IF NOT EXISTS` clauses, making it safe to run multiple times.
 
-## 🎯 Usage
+## Usage
 
 ### Default Admin Credentials
-After running `npm run seed:admin`, you'll get:
-- **Login ID**: `OIADMI000000` (or as configured)
-- **Password**: `admin123` (or randomly generated)
+After running `npm run seed:admin`:
+- Login ID: `OIADMI000000`
+- Password: `admin123` (or randomly generated if not specified)
 
-### User Roles & Permissions
+### User Roles
 
-1. **Admin**: Full system access
-   - Employee management
-   - Department management
-   - Access rights configuration
-   - All payroll and leave operations
+**Admin** - Full system access including employee management, departments, access rights, and all payroll operations
 
-2. **HR**: Human resources operations
-   - Employee onboarding
-   - Leave allocations
-   - Attendance monitoring
-   - Basic employee management
+**HR** - Employee onboarding, leave allocations, attendance monitoring, and basic employee management
 
-3. **Payroll**: Payroll-specific operations
-   - Payrun generation
-   - Payslip validation
-   - Salary structure management
+**Payroll** - Payrun generation, payslip validation, and salary structure management
 
-4. **Employee**: Self-service portal
-   - View own profile
-   - Mark attendance (facial recognition)
-   - Apply for leaves
-   - View own payslips
-   - Update personal information
+**Employee** - Self-service portal for profile viewing, attendance marking, leave applications, and payslip access
 
 ### Login ID Format
 Auto-generated in format: `OI{FirstInitial}{LastInitial}{Year}{Serial}`
 
-Example: Employee "John Doe" joining in 2025 as 5th employee → `OIJD25000005`
+Example: John Doe joining in 2025 as 5th employee → `OIJD25000005`
 
-## 📊 Payroll Calculation Logic
+## Payroll Calculation
 
 ### Salary Components
 1. **Monthly Wage**: Base salary
@@ -270,7 +233,7 @@ Employer Cost = Prorated Monthly Wage
 - Automatically calculates expected working days in month
 - Respects weekends based on configuration
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 master/
@@ -322,7 +285,7 @@ master/
 └── README.md
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /auth/login` - User login
@@ -391,7 +354,7 @@ master/
 - `POST /face/verify` - Verify face against stored descriptor
 - `GET /face/descriptor/:employee_id` - Get face descriptor
 
-## 🎨 Features in Detail
+## How It Works
 
 ### Facial Recognition Attendance
 1. Employee registers their face (one-time)
@@ -421,7 +384,7 @@ master/
 - Company-level access control
 - Isolated payroll processing per company
 
-## 📝 Available Scripts
+## Available Scripts
 
 ### Backend
 ```bash
@@ -439,7 +402,7 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 ```
 
-## 🐳 Docker Support
+## Docker Support
 
 The project includes Dockerfile for the Python face recognition service:
 
@@ -449,14 +412,14 @@ docker build -t hrx-face-service .
 docker run -p 5000:5000 hrx-face-service
 ```
 
-## 🧪 Testing
+## Testing
 
 Integration tests are documented in:
 - `PAYROLL_INTEGRATION_TEST_GUIDE.md` - Payroll testing guide
 - `frontend/ATTENDANCE_STATUS_GUIDE.md` - Attendance status guide
 - `frontend/QUICKSTART.md` - Quick start guide
 
-## 🔒 Security Considerations
+## Security
 
 - Passwords hashed with bcrypt
 - JWT tokens stored in httpOnly cookies
@@ -465,7 +428,7 @@ Integration tests are documented in:
 - SQL injection prevention via parameterized queries
 - XSS protection via React's default escaping
 
-## 🚀 Deployment
+## Deployment
 
 ### Backend
 1. Set production environment variables
@@ -489,13 +452,13 @@ Integration tests are documented in:
 4. Set up backups
 5. Enable SSL connections (recommended)
 
-## 📦 Batch Scripts (Windows)
+## Batch Scripts (Windows)
 
 - `install-facial-recognition.bat` - Install face recognition dependencies
 - `start-all.bat` - Start all services
 - `start-face-service.bat` - Start only face recognition service
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -503,15 +466,15 @@ Integration tests are documented in:
 4. Push to the branch
 5. Create a Pull Request
 
-## 📄 License
+## License
 
-ISC License
+ISC
 
-## 👥 Authors
+## Authors
 
-HRX HRMS Development Team
+HRX Development Team
 
-## 🐛 Known Issues & Limitations
+## Known Issues
 
 - Facial recognition requires good lighting conditions
 - Face models need to be downloaded on first run
@@ -519,23 +482,19 @@ HRX HRMS Development Team
 - Single face registration per employee
 - Time zone handling assumes UTC
 
-## 📞 Support
+## Support
 
-For issues and questions, please create an issue in the repository.
+Create an issue in the repository for questions or bug reports.
 
-## 🔮 Future Enhancements
+## Roadmap
 
-- [ ] Mobile app for attendance
-- [ ] Biometric integration options
-- [ ] Advanced analytics dashboard
-- [ ] Document management system
-- [ ] Performance review module
-- [ ] Recruitment & onboarding workflow
-- [ ] Time tracking & project allocation
-- [ ] Expense management
-- [ ] Multi-language support
-- [ ] Dark mode
-
----
-
-**Built with ❤️ using modern web technologies**
+- Mobile app for attendance
+- Advanced biometric integration
+- Enhanced analytics dashboard
+- Document management system
+- Performance review module
+- Recruitment workflow
+- Time tracking & project allocation
+- Expense management
+- Multi-language support
+- Dark mode
