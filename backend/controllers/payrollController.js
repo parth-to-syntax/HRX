@@ -1,5 +1,6 @@
 import { pool } from '../db.js';
 import PDFDocument from 'pdfkit';
+import { sendPayslipsForPayrun, sendPayslipEmail } from '../services/payslipEmailService.js';
 
 function getMonthName(month) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 
@@ -477,29 +478,173 @@ export async function getPayslipPdf(req, res) {
     res.setHeader('Content-Disposition', `attachment; filename=payslip_${id}.pdf`);
     const doc = new PDFDocument({ margin: 50 });
     doc.pipe(res);
-    doc.fontSize(18).text('Payslip', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Employee: ${slip.first_name || ''} ${slip.last_name || ''}`);
+    
+    // Modern Header with gradient-like background (purple/blue theme)
+    doc.rect(0, 0, doc.page.width, 120).fill('#6366f1');
+    doc.fillColor('#ffffff')
+       .fontSize(28)
+       .font('Helvetica-Bold')
+       .text('💰 PAYSLIP', 50, 35, { align: 'center' });
+    
+    doc.fontSize(11)
+       .font('Helvetica')
+       .text(`Period: ${String(slip.period_month).padStart(2,'0')}/${slip.period_year}`, 50, 75, { align: 'center' });
+    
+    // Status badge
+    const statusColor = slip.status === 'validated' ? '#10b981' : slip.status === 'cancelled' ? '#ef4444' : '#f59e0b';
+    doc.fontSize(10)
+       .fillColor('#ffffff')
+       .text(`● ${slip.status.toUpperCase()}`, 50, 95, { align: 'center' });
+    
+    // Reset to black text
+    doc.fillColor('#000000');
+    
+    // Employee Info Section
+    doc.moveDown(4);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor('#6366f1')
+       .text('EMPLOYEE INFORMATION', 50);
+    
+    doc.moveDown(0.5);
+    doc.strokeColor('#e5e7eb')
+       .lineWidth(1)
+       .moveTo(50, doc.y)
+       .lineTo(doc.page.width - 50, doc.y)
+       .stroke();
+    
+    doc.moveDown(0.8);
+    doc.fontSize(11)
+       .font('Helvetica')
+       .fillColor('#374151')
+       .text(`Name: ${slip.first_name || ''} ${slip.last_name || ''}`, 50);
     doc.text(`Email: ${slip.email || ''}`);
-  doc.text(`Period: ${String(slip.period_month).padStart(2,'0')}/${slip.period_year} (Generated: ${new Date(slip.created_at).toISOString().slice(0,10)})`);
-    doc.text(`Status: ${slip.status}`);
-    doc.moveDown();
-    doc.text(`Payable Days: ${slip.payable_days || 0}`);
-    doc.text(`Worked Days: ${slip.total_worked_days || 0}`);
-    doc.text(`Leave Days: ${slip.total_leaves || 0}`);
-    doc.moveDown();
-    doc.fontSize(14).text('Earnings');
-    comps.rows.filter(c=>!c.is_deduction).forEach(c=>{
-      doc.fontSize(12).text(`${c.component_name}: ${Number(c.amount).toFixed(2)}`);
-    });
-    doc.moveDown();
-    doc.fontSize(14).text('Deductions');
-    comps.rows.filter(c=>c.is_deduction).forEach(c=>{
-      doc.fontSize(12).text(`${c.component_name}: ${Number(c.amount).toFixed(2)}`);
-    });
-    doc.moveDown();
-    doc.fontSize(12).text(`Gross Wage: ${Number(slip.gross_wage).toFixed(2)}`);
-    doc.text(`Net Wage: ${Number(slip.net_wage).toFixed(2)}`);
+    doc.text(`Generated: ${new Date(slip.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`);
+    
+    // Attendance Summary Box
+    doc.moveDown(1.5);
+    doc.rect(50, doc.y, doc.page.width - 100, 80)
+       .fillAndStroke('#f0f9ff', '#3b82f6');
+    
+    const boxY = doc.y + 15;
+    doc.fontSize(10)
+       .font('Helvetica-Bold')
+       .fillColor('#1e40af')
+       .text('ATTENDANCE SUMMARY', 60, boxY);
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor('#374151')
+       .text(`Payable Days: ${slip.payable_days || 0}`, 60, boxY + 25);
+    doc.text(`Worked Days: ${slip.total_worked_days || 0}`, 220, boxY + 25);
+    doc.text(`Leave Days: ${slip.total_leaves || 0}`, 380, boxY + 25);
+    
+    doc.y += 95;
+    
+    // Earnings Section
+    doc.moveDown(1.5);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor('#10b981')
+       .text('✓ EARNINGS', 50);
+    
+    doc.moveDown(0.5);
+    doc.strokeColor('#10b981')
+       .lineWidth(2)
+       .moveTo(50, doc.y)
+       .lineTo(doc.page.width - 50, doc.y)
+       .stroke();
+    
+    doc.moveDown(0.8);
+    const earnings = comps.rows.filter(c => !c.is_deduction);
+    if (earnings.length === 0) {
+      doc.fontSize(10)
+         .font('Helvetica-Oblique')
+         .fillColor('#9ca3af')
+         .text('No earnings components', 60);
+    } else {
+      earnings.forEach(c => {
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#374151')
+           .text(`${c.component_name}`, 60, doc.y, { continued: true })
+           .font('Helvetica-Bold')
+           .fillColor('#10b981')
+           .text(`₹${Number(c.amount).toFixed(2)}`, { align: 'right' });
+        doc.moveDown(0.5);
+      });
+    }
+    
+    // Deductions Section
+    doc.moveDown(1.5);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor('#ef4444')
+       .text('✗ DEDUCTIONS', 50);
+    
+    doc.moveDown(0.5);
+    doc.strokeColor('#ef4444')
+       .lineWidth(2)
+       .moveTo(50, doc.y)
+       .lineTo(doc.page.width - 50, doc.y)
+       .stroke();
+    
+    doc.moveDown(0.8);
+    const deductions = comps.rows.filter(c => c.is_deduction);
+    if (deductions.length === 0) {
+      doc.fontSize(10)
+         .font('Helvetica-Oblique')
+         .fillColor('#9ca3af')
+         .text('No deductions', 60);
+    } else {
+      deductions.forEach(c => {
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#374151')
+           .text(`${c.component_name}`, 60, doc.y, { continued: true })
+           .font('Helvetica-Bold')
+           .fillColor('#ef4444')
+           .text(`₹${Number(c.amount).toFixed(2)}`, { align: 'right' });
+        doc.moveDown(0.5);
+      });
+    }
+    
+    // Summary Section with colored boxes
+    doc.moveDown(2);
+    
+    // Gross Wage Box
+    doc.rect(50, doc.y, (doc.page.width - 100) / 2 - 10, 60)
+       .fillAndStroke('#fef3c7', '#f59e0b');
+    const grossY = doc.y + 15;
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#92400e')
+       .text('GROSS WAGE', 60, grossY, { width: (doc.page.width - 100) / 2 - 30, align: 'center' });
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#f59e0b')
+       .text(`₹${Number(slip.gross_wage).toFixed(2)}`, 60, grossY + 22, { width: (doc.page.width - 100) / 2 - 30, align: 'center' });
+    
+    // Net Wage Box
+    doc.rect((doc.page.width / 2) + 10, grossY - 15, (doc.page.width - 100) / 2 - 10, 60)
+       .fillAndStroke('#d1fae5', '#10b981');
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#065f46')
+       .text('NET WAGE', (doc.page.width / 2) + 20, grossY, { width: (doc.page.width - 100) / 2 - 30, align: 'center' });
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#10b981')
+       .text(`₹${Number(slip.net_wage).toFixed(2)}`, (doc.page.width / 2) + 20, grossY + 22, { width: (doc.page.width - 100) / 2 - 30, align: 'center' });
+    
+    // Footer
+    doc.y = doc.page.height - 80;
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#9ca3af')
+       .text('This is a computer-generated payslip. No signature required.', 50, doc.y, { align: 'center', width: doc.page.width - 100 });
+    doc.text(`Generated on ${new Date().toLocaleString('en-US')}`, { align: 'center', width: doc.page.width - 100 });
+    
     doc.end();
   } catch (e) {
     console.error(e);
@@ -533,24 +678,183 @@ export async function getEmployeeYearSalaryPdf(req, res) {
     );
     const totalGross = payslips.rows.reduce((s,r)=>s+Number(r.gross_wage),0);
     const totalNet = payslips.rows.reduce((s,r)=>s+Number(r.net_wage),0);
+    const totalWorked = payslips.rows.reduce((s,r)=>s+Number(r.total_worked_days||0),0);
+    const totalLeave = payslips.rows.reduce((s,r)=>s+Number(r.total_leaves||0),0);
 
     res.setHeader('Content-Type','application/pdf');
     res.setHeader('Content-Disposition',`attachment; filename=salary_${employee_id}_${year}.pdf`);
-    const doc = new PDFDocument({ margin:50 });
+    const doc = new PDFDocument({ margin: 50 });
     doc.pipe(res);
-    doc.fontSize(18).text(`Yearly Salary Report - ${year}`, { align:'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Employee: ${emp.rows[0].first_name || ''} ${emp.rows[0].last_name || ''}`);
+    
+    // Modern Header with gradient background (teal/green theme for yearly report)
+    doc.rect(0, 0, doc.page.width, 140).fill('#0d9488');
+    doc.fillColor('#ffffff')
+       .fontSize(30)
+       .font('Helvetica-Bold')
+       .text('📊 ANNUAL SALARY REPORT', 50, 30, { align: 'center' });
+    
+    doc.fontSize(20)
+       .font('Helvetica-Bold')
+       .text(year, 50, 75, { align: 'center' });
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 50, 110, { align: 'center' });
+    
+    // Reset to black text
+    doc.fillColor('#000000');
+    
+    // Employee Info Section
+    doc.moveDown(5);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor('#0d9488')
+       .text('EMPLOYEE INFORMATION', 50);
+    
+    doc.moveDown(0.5);
+    doc.strokeColor('#e5e7eb')
+       .lineWidth(1)
+       .moveTo(50, doc.y)
+       .lineTo(doc.page.width - 50, doc.y)
+       .stroke();
+    
+    doc.moveDown(0.8);
+    doc.fontSize(11)
+       .font('Helvetica')
+       .fillColor('#374151')
+       .text(`Name: ${emp.rows[0].first_name || ''} ${emp.rows[0].last_name || ''}`, 50);
     doc.text(`Email: ${emp.rows[0].email || ''}`);
-    doc.text(`Company: ${req.user.company_id}`);
-    doc.moveDown();
-    doc.text(`Total Gross: ${totalGross.toFixed(2)}`);
-    doc.text(`Total Net: ${totalNet.toFixed(2)}`);
-    doc.moveDown();
-    doc.fontSize(14).text('Monthly Breakdown');
-    payslips.rows.forEach(r=>{
-      doc.fontSize(12).text(`Month ${r.period_month}: Gross=${Number(r.gross_wage).toFixed(2)} Net=${Number(r.net_wage).toFixed(2)} PayableDays=${r.payable_days||0} Worked=${r.total_worked_days||0} Leave=${r.total_leaves||0}`);
-    });
+    doc.text(`Employee ID: ${employee_id}`);
+    
+    // Summary Cards Section
+    doc.moveDown(2);
+    
+    // Total Gross Box
+    const cardY = doc.y;
+    const cardWidth = (doc.page.width - 140) / 3;
+    
+    doc.rect(50, cardY, cardWidth, 70)
+       .fillAndStroke('#fef3c7', '#f59e0b');
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#92400e')
+       .text('TOTAL GROSS', 60, cardY + 15, { width: cardWidth - 20, align: 'center' });
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#f59e0b')
+       .text(`₹${totalGross.toFixed(2)}`, 60, cardY + 35, { width: cardWidth - 20, align: 'center' });
+    
+    // Total Net Box
+    doc.rect(65 + cardWidth, cardY, cardWidth, 70)
+       .fillAndStroke('#d1fae5', '#10b981');
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#065f46')
+       .text('TOTAL NET', 75 + cardWidth, cardY + 15, { width: cardWidth - 20, align: 'center' });
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#10b981')
+       .text(`₹${totalNet.toFixed(2)}`, 75 + cardWidth, cardY + 35, { width: cardWidth - 20, align: 'center' });
+    
+    // Total Days Worked Box
+    doc.rect(80 + cardWidth * 2, cardY, cardWidth, 70)
+       .fillAndStroke('#dbeafe', '#3b82f6');
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#1e3a8a')
+       .text('DAYS WORKED', 90 + cardWidth * 2, cardY + 15, { width: cardWidth - 20, align: 'center' });
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#3b82f6')
+       .text(`${totalWorked}`, 90 + cardWidth * 2, cardY + 35, { width: cardWidth - 20, align: 'center' });
+    doc.fontSize(8)
+       .font('Helvetica')
+       .fillColor('#1e3a8a')
+       .text(`Leave: ${totalLeave} days`, 90 + cardWidth * 2, cardY + 53, { width: cardWidth - 20, align: 'center' });
+    
+    doc.y = cardY + 90;
+    
+    // Monthly Breakdown Section
+    doc.moveDown(2);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor('#0d9488')
+       .text('📅 MONTHLY BREAKDOWN', 50);
+    
+    doc.moveDown(0.5);
+    doc.strokeColor('#0d9488')
+       .lineWidth(2)
+       .moveTo(50, doc.y)
+       .lineTo(doc.page.width - 50, doc.y)
+       .stroke();
+    
+    doc.moveDown(1);
+    
+    // Table Header
+    const tableTop = doc.y;
+    const colWidths = [60, 90, 90, 70, 70, 70];
+    const colX = [50, 110, 200, 290, 360, 430];
+    
+    doc.rect(50, tableTop, doc.page.width - 100, 25)
+       .fill('#f3f4f6');
+    
+    doc.fontSize(9)
+       .font('Helvetica-Bold')
+       .fillColor('#1f2937')
+       .text('MONTH', colX[0] + 5, tableTop + 8)
+       .text('GROSS', colX[1] + 5, tableTop + 8)
+       .text('NET', colX[2] + 5, tableTop + 8)
+       .text('PAYABLE', colX[3] + 5, tableTop + 8)
+       .text('WORKED', colX[4] + 5, tableTop + 8)
+       .text('LEAVE', colX[5] + 5, tableTop + 8);
+    
+    doc.y = tableTop + 30;
+    
+    // Month names
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Table Rows
+    if (payslips.rows.length === 0) {
+      doc.fontSize(10)
+         .font('Helvetica-Oblique')
+         .fillColor('#9ca3af')
+         .text('No payslips found for this year', 60, doc.y + 10);
+    } else {
+      payslips.rows.forEach((r, idx) => {
+        const rowY = doc.y;
+        const rowColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+        
+        doc.rect(50, rowY, doc.page.width - 100, 22)
+           .fill(rowColor);
+        
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor('#374151')
+           .text(monthNames[r.period_month - 1] || r.period_month, colX[0] + 5, rowY + 6)
+           .fillColor('#f59e0b')
+           .font('Helvetica-Bold')
+           .text(`₹${Number(r.gross_wage).toFixed(2)}`, colX[1] + 5, rowY + 6)
+           .fillColor('#10b981')
+           .text(`₹${Number(r.net_wage).toFixed(2)}`, colX[2] + 5, rowY + 6)
+           .fillColor('#6b7280')
+           .font('Helvetica')
+           .text(`${r.payable_days || 0}`, colX[3] + 5, rowY + 6)
+           .text(`${r.total_worked_days || 0}`, colX[4] + 5, rowY + 6)
+           .fillColor('#ef4444')
+           .text(`${r.total_leaves || 0}`, colX[5] + 5, rowY + 6);
+        
+        doc.y = rowY + 22;
+      });
+    }
+    
+    // Footer
+    doc.y = doc.page.height - 80;
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#9ca3af')
+       .text('This is a computer-generated annual salary report.', 50, doc.y, { align: 'center', width: doc.page.width - 100 });
+    doc.text(`Confidential - For ${emp.rows[0].first_name} ${emp.rows[0].last_name} only`, { align: 'center', width: doc.page.width - 100 });
+    
     doc.end();
   } catch (e) {
     console.error(e);
@@ -634,5 +938,108 @@ export async function listMyPayslips(req, res) {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to fetch my payslips' });
+  }
+}
+
+/**
+ * Send payslip emails for a specific payrun
+ * Admin/HR/Payroll can trigger this
+ */
+export async function sendPayrunEmails(req, res) {
+  try {
+    const { id } = req.params; // payrun id
+    const role = req.user.role;
+    
+    // Only admin, hr, and payroll can send emails
+    if (!['admin', 'hr', 'payroll'].includes(role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Verify payrun belongs to user's company
+    const payrunQuery = await pool.query(
+      'SELECT id, company_id, period_month, period_year FROM payruns WHERE id=$1',
+      [id]
+    );
+
+    if (!payrunQuery.rowCount) {
+      return res.status(404).json({ error: 'Payrun not found' });
+    }
+
+    const payrun = payrunQuery.rows[0];
+    
+    if (payrun.company_id !== req.user.company_id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Send emails
+    const result = await sendPayslipsForPayrun(id);
+
+    if (result.success) {
+      res.json({
+        message: 'Payslip emails sent successfully',
+        sent: result.sent,
+        failed: result.failed,
+        errors: result.errors
+      });
+    } else {
+      res.status(400).json({
+        error: result.message
+      });
+    }
+
+  } catch (error) {
+    console.error('Error sending payrun emails:', error);
+    res.status(500).json({ error: 'Failed to send payslip emails' });
+  }
+}
+
+/**
+ * Send payslip email to a single employee
+ * Admin/HR/Payroll can trigger this
+ */
+export async function sendSinglePayslipEmail(req, res) {
+  try {
+    const { id } = req.params; // payslip id
+    const role = req.user.role;
+    
+    // Only admin, hr, and payroll can send emails
+    if (!['admin', 'hr', 'payroll'].includes(role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Verify payslip belongs to user's company
+    const payslipQuery = await pool.query(
+      `SELECT p.id, p.employee_id, e.company_id
+       FROM payslips p
+       JOIN employees e ON e.id = p.employee_id
+       WHERE p.id=$1`,
+      [id]
+    );
+
+    if (!payslipQuery.rowCount) {
+      return res.status(404).json({ error: 'Payslip not found' });
+    }
+
+    const payslip = payslipQuery.rows[0];
+    
+    if (payslip.company_id !== req.user.company_id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Send email
+    const result = await sendPayslipEmail(payslip.employee_id, id);
+
+    res.json({
+      message: 'Payslip email sent successfully',
+      email: result.email,
+      messageId: result.messageId
+    });
+
+  } catch (error) {
+    console.error('Error sending payslip email:', error);
+    res.status(500).json({ 
+      error: 'Failed to send payslip email',
+      details: error.message 
+    });
   }
 }

@@ -3,14 +3,19 @@ import { useState, useEffect } from 'react'
 import { getMyAttendance } from '@/api/attendance'
 
 // More defensive status resolution:
+// - PRIORITY 1: Redux employeeStatusMap (real-time updates from check-in/check-out)
+// - PRIORITY 2: API fetch for today's attendance (most reliable source)
+// - PRIORITY 3: Backend attendance_status from currentUser
+// - PRIORITY 4: Redux attendance records
+// - PRIORITY 5: Leave requests
 // - If employeeId missing, still show 'weekend' on Sat/Sun else 'not-checked-in'.
 // - Leave takes precedence, then attendance, then weekend, then absent.
 // - Gracefully handles slices not yet hydrated (undefined arrays).
-// - Fetches real-time attendance data from API for accurate status
 export const useEmployeeStatus = (employeeId) => {
   const attendanceSlice = useSelector((state) => state.attendance)
   const leaveSlice = useSelector((state) => state.leave)
   const currentUser = useSelector((state) => state.user?.currentUser)
+  const employeeStatusMap = useSelector((state) => state.attendance?.employeeStatusMap || {})
   const records = Array.isArray(attendanceSlice?.records) ? attendanceSlice.records : []
   const requests = Array.isArray(leaveSlice?.requests) ? leaveSlice.requests : []
   const [todayAttendanceStatus, setTodayAttendanceStatus] = useState(null)
@@ -44,7 +49,26 @@ export const useEmployeeStatus = (employeeId) => {
     return isWeekend ? 'weekend' : 'not-checked-in'
   }
 
-  // Check if we have fresh attendance data from API (most reliable source)
+  // PRIORITY 1: Check Redux employeeStatusMap for real-time status updates
+  const reduxStatus = employeeStatusMap[employeeId]
+  console.log(`useEmployeeStatus for ${employeeId}:`, { 
+    reduxStatus, 
+    today, 
+    hasMatch: reduxStatus && reduxStatus.date === today,
+    allStatusMap: employeeStatusMap 
+  })
+  
+  if (reduxStatus && reduxStatus.date === today) {
+    console.log(`Using Redux status for ${employeeId}:`, reduxStatus.status)
+    if (reduxStatus.status === 'leave') return 'on-leave'
+    if (reduxStatus.status === 'present') {
+      // Check if checked in and out
+      if (reduxStatus.check_in && reduxStatus.check_out) return 'checked-out'
+      if (reduxStatus.check_in) return 'checked-in'
+    }
+  }
+
+  // PRIORITY 2: Check if we have fresh attendance data from API (most reliable source)
   if (todayAttendanceStatus) {
     const status = todayAttendanceStatus.status
     if (status === 'leave') return 'on-leave'
@@ -58,7 +82,7 @@ export const useEmployeeStatus = (employeeId) => {
     }
   }
 
-  // Check if current user has backend attendance status (from getMyAttendance API)
+  // PRIORITY 3: Check if current user has backend attendance status (from getMyAttendance API)
   // This is more reliable than Redux state for leave status
   if (currentUser?.attendance_status) {
     const status = currentUser.attendance_status
@@ -70,7 +94,7 @@ export const useEmployeeStatus = (employeeId) => {
     }
   }
 
-  // Leave spanning today (case-insensitive check for 'approved')
+  // PRIORITY 4: Leave spanning today (case-insensitive check for 'approved')
   const onLeave = requests.some(req => {
     if (req.employeeId !== employeeId) return false
     const statusLower = (req.status || '').toLowerCase()
@@ -81,7 +105,7 @@ export const useEmployeeStatus = (employeeId) => {
   })
   if (onLeave) return 'on-leave'
 
-  // Attendance from Redux
+  // PRIORITY 5: Attendance from Redux
   const todayAttendance = records.find(rec => rec.employeeId === employeeId && rec.date === today)
   if (todayAttendance?.checkIn && todayAttendance?.checkOut) return 'checked-out'
   if (todayAttendance?.checkIn) return 'checked-in'

@@ -45,21 +45,35 @@ export async function registerEmployee(req, res) {
 
       const year = new Date(date_of_joining).getFullYear();
 
-      // Lock the row for the year to avoid race conditions; create if missing
-      // Upsert pattern: try update; if no row, insert then update again
-      const upsertCounter = `
-        INSERT INTO joining_counters (year, current_serial)
-        VALUES ($1, 0)
-        ON CONFLICT (year) DO NOTHING
-      `;
-      await client.query(upsertCounter, [year]);
-
-      // Increment and fetch the new serial atomically
-      const { rows: counterRows } = await client.query(
-        'UPDATE joining_counters SET current_serial = current_serial + 1, updated_at = NOW() WHERE year = $1 RETURNING current_serial',
+      // Ensure counter exists for this year
+      await client.query(
+        'INSERT INTO joining_counters (year, current_serial) VALUES ($1, 0) ON CONFLICT (year) DO NOTHING',
         [year]
       );
-      const joining_serial = counterRows[0].current_serial;
+
+      // Get the maximum existing serial for this year to ensure we don't create duplicates
+      const maxSerial = await client.query(
+        'SELECT COALESCE(MAX(joining_serial), 0) as max_serial FROM employees WHERE EXTRACT(YEAR FROM date_of_joining) = $1',
+        [year]
+      );
+      const currentMaxSerial = maxSerial.rows[0].max_serial;
+
+      // Lock the counter row and get current value
+      const { rows: counterRows } = await client.query(
+        'SELECT current_serial FROM joining_counters WHERE year = $1 FOR UPDATE',
+        [year]
+      );
+      
+      // Use the higher of counter or actual max serial, then increment
+      const nextSerial = Math.max(counterRows[0].current_serial, currentMaxSerial) + 1;
+      
+      // Update counter to new value
+      await client.query(
+        'UPDATE joining_counters SET current_serial = $1, updated_at = NOW() WHERE year = $2',
+        [nextSerial, year]
+      );
+      
+      const joining_serial = nextSerial;
 
       const login_id = generateLoginId(first_name, last_name, date_of_joining, joining_serial);
       const tempPassword = crypto.randomBytes(6).toString('hex');
@@ -103,15 +117,36 @@ export async function publicSignup(req, res) {
     try {
       await client.query('BEGIN');
       const year = new Date(date_of_joining).getFullYear();
+      
+      // Ensure counter exists for this year
       await client.query(
         'INSERT INTO joining_counters (year, current_serial) VALUES ($1, 0) ON CONFLICT (year) DO NOTHING',
         [year]
       );
-      const serialQ = await client.query(
-        'UPDATE joining_counters SET current_serial = current_serial + 1, updated_at = NOW() WHERE year=$1 RETURNING current_serial',
+      
+      // Get the maximum existing serial for this year to ensure we don't create duplicates
+      const maxSerial = await client.query(
+        'SELECT COALESCE(MAX(joining_serial), 0) as max_serial FROM employees WHERE EXTRACT(YEAR FROM date_of_joining) = $1',
         [year]
       );
-      const joining_serial = serialQ.rows[0].current_serial;
+      const currentMaxSerial = maxSerial.rows[0].max_serial;
+      
+      // Lock the counter row and get current value
+      const { rows: counterRows } = await client.query(
+        'SELECT current_serial FROM joining_counters WHERE year = $1 FOR UPDATE',
+        [year]
+      );
+      
+      // Use the higher of counter or actual max serial, then increment
+      const nextSerial = Math.max(counterRows[0].current_serial, currentMaxSerial) + 1;
+      
+      // Update counter to new value
+      await client.query(
+        'UPDATE joining_counters SET current_serial = $1, updated_at = NOW() WHERE year = $2',
+        [nextSerial, year]
+      );
+      
+      const joining_serial = nextSerial;
       const login_id = generateLoginId(first_name, last_name, date_of_joining, joining_serial);
       // Always auto-generate a temporary password for public signup and email it.
       const tempPassword = crypto.randomBytes(6).toString('hex');

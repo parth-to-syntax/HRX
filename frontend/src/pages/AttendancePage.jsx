@@ -732,7 +732,7 @@
 // }
 
 import { useState, useEffect, useRef } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { ChevronLeft, ChevronRight, Clock, Calendar, Scan, Users, UserCheck, UserX, Plane } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -743,9 +743,12 @@ import { checkIn, checkOut, getMyAttendance, listAttendanceByDate, markAbsents }
 import { getMyEnrollment } from '@/api/face'
 import { listMyAllocations } from '@/api/leaves'
 import { useEmployeeStatus } from '@/hooks/useEmployeeStatus'
+import { updateEmployeeStatus } from '@/redux/slices/attendanceSlice'
+import { updateEmployee } from '@/redux/slices/employeesSlice'
 import toast from 'react-hot-toast'
 
 export default function AttendancePage() {
+  const dispatch = useDispatch()
   const { currentUser } = useSelector((state) => state.user)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [searchTerm, setSearchTerm] = useState('')
@@ -935,9 +938,38 @@ export default function AttendancePage() {
       setTodayStatus(result)
       // Immediately update header status for instant UI feedback
       setLocalStatusOverride('checked-in')
+      // Dispatch to Redux for global real-time status update
+      console.log('Dispatching Redux update for employee:', currentUser?.id, currentUser)
+      if (currentUser?.id) {
+        dispatch(updateEmployeeStatus({
+          employeeId: currentUser.id,
+          status: 'present',
+          check_in: result.check_in,
+          date: selectedDateStr,
+          lastUpdated: new Date().toISOString()
+        }))
+        
+        // SIMPLE FIX: Update employee directly in employees list
+        dispatch(updateEmployee({
+          id: currentUser.id,
+          attendance_status: 'present',
+          attendance: {
+            status: 'present',
+            check_in: result.check_in,
+            date: selectedDateStr
+          }
+        }))
+        
+        console.log('Redux status dispatched:', {
+          employeeId: currentUser.id,
+          status: 'present',
+          check_in: result.check_in,
+          date: selectedDateStr
+        })
+      }
       loadAttendance()
-      // Clear override after 2 seconds to let hook take over with fresh data
-      setTimeout(() => setLocalStatusOverride(null), 2000)
+      // Clear override after 5 minutes to let hook take over with fresh data
+      setTimeout(() => setLocalStatusOverride(null), 5 * 60 * 1000) // 5 minutes
     } catch (err) {
       console.error('Check-in error:', err)
       toast.error(err.response?.data?.error || 'Failed to check in')
@@ -956,9 +988,34 @@ export default function AttendancePage() {
       setTodayStatus(result)
       // Immediately update header status for instant UI feedback
       setLocalStatusOverride('checked-out')
+      // Dispatch to Redux for global real-time status update
+      if (currentUser?.id) {
+        dispatch(updateEmployeeStatus({
+          employeeId: currentUser.id,
+          status: 'present',
+          check_in: result.check_in,
+          check_out: result.check_out,
+          work_hours: result.work_hours,
+          date: selectedDateStr,
+          lastUpdated: new Date().toISOString()
+        }))
+        
+        // SIMPLE FIX: Update employee directly in employees list
+        dispatch(updateEmployee({
+          id: currentUser.id,
+          attendance_status: 'present',
+          attendance: {
+            status: 'present',
+            check_in: result.check_in,
+            check_out: result.check_out,
+            work_hours: result.work_hours,
+            date: selectedDateStr
+          }
+        }))
+      }
       loadAttendance()
-      // Clear override after 2 seconds to let hook take over with fresh data
-      setTimeout(() => setLocalStatusOverride(null), 2000)
+      // Clear override after 5 minutes to let hook take over with fresh data
+      setTimeout(() => setLocalStatusOverride(null), 5 * 60 * 1000) // 5 minutes
     } catch (err) {
       console.error('Check-out error:', err)
       toast.error(err.response?.data?.error || 'Failed to check out')
@@ -1333,9 +1390,30 @@ export default function AttendancePage() {
             setTodayStatus(attendance);
             // Immediately update header status for instant UI feedback
             setLocalStatusOverride('checked-in');
+            // Dispatch to Redux for global real-time status update
+            if (currentUser?.id) {
+              dispatch(updateEmployeeStatus({
+                employeeId: currentUser.id,
+                status: 'present',
+                check_in: attendance.check_in,
+                date: selectedDateStr,
+                lastUpdated: new Date().toISOString()
+              }))
+              
+              // SIMPLE FIX: Update employee directly in employees list
+              dispatch(updateEmployee({
+                id: currentUser.id,
+                attendance_status: 'present',
+                attendance: {
+                  status: 'present',
+                  check_in: attendance.check_in,
+                  date: selectedDateStr
+                }
+              }))
+            }
             loadAttendance();
-            // Clear override after 2 seconds to let hook take over with fresh data
-            setTimeout(() => setLocalStatusOverride(null), 2000);
+            // Clear override after 5 minutes to let hook take over with fresh data
+            setTimeout(() => setLocalStatusOverride(null), 5 * 60 * 1000); // 5 minutes
             setShowFaceCheckIn(false);
           }}
           enrolledFaceUrl={faceEnrollment?.face_photo_url}
@@ -1498,9 +1576,30 @@ export default function AttendancePage() {
             setTodayStatus(attendance);
             // Immediately update header status for instant UI feedback
             setLocalStatusOverride('checked-in');
+            // Dispatch to Redux for global real-time status update
+            if (currentUser?.id) {
+              dispatch(updateEmployeeStatus({
+                employeeId: currentUser.id,
+                status: 'present',
+                check_in: attendance.check_in,
+                date: selectedDateStr,
+                lastUpdated: new Date().toISOString()
+              }))
+              
+              // SIMPLE FIX: Update employee directly in employees list
+              dispatch(updateEmployee({
+                id: currentUser.id,
+                attendance_status: 'present',
+                attendance: {
+                  status: 'present',
+                  check_in: attendance.check_in,
+                  date: selectedDateStr
+                }
+              }))
+            }
             loadAttendance();
-            // Clear override after 2 seconds to let hook take over with fresh data
-            setTimeout(() => setLocalStatusOverride(null), 2000);
+            // Clear override after 5 minutes to let hook take over with fresh data
+            setTimeout(() => setLocalStatusOverride(null), 5 * 60 * 1000); // 5 minutes
             setShowFaceCheckIn(false);
           }}
           enrolledFaceUrl={faceEnrollment?.face_photo_url}

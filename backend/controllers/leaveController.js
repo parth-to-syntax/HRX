@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { sendMail } from '../utils/email.js';
 
 function toDateOnly(d) {
   if (!d) return null;
@@ -260,6 +261,52 @@ export async function approveLeaveRequest(req, res) {
     await upsertAttendanceLeaveForRange(client, reqRow.employee_id, start, end);
 
     await client.query('COMMIT');
+    
+    // Send email notification to employee
+    try {
+      const empQ = await pool.query(
+        'SELECT first_name, last_name, email FROM employees WHERE id=$1',
+        [reqRow.employee_id]
+      );
+      const ltQ = await pool.query('SELECT name FROM leave_types WHERE id=$1', [reqRow.leave_type_id]);
+      
+      if (empQ.rows.length && empQ.rows[0].email) {
+        const employee = empQ.rows[0];
+        const leaveType = ltQ.rows[0]?.name || 'Leave';
+        
+        await sendMail({
+          to: employee.email,
+          subject: '✅ Leave Request Approved',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #10b981;">Leave Request Approved</h2>
+              <p>Dear ${employee.first_name} ${employee.last_name},</p>
+              <p>Your leave request has been <strong style="color: #10b981;">approved</strong>.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Leave Details</h3>
+                <p><strong>Type:</strong> ${leaveType}</p>
+                <p><strong>From:</strong> ${new Date(reqRow.start_date).toLocaleDateString()}</p>
+                <p><strong>To:</strong> ${new Date(reqRow.end_date).toLocaleDateString()}</p>
+                <p><strong>Duration:</strong> ${days} day(s)</p>
+                ${reqRow.reason ? `<p><strong>Reason:</strong> ${reqRow.reason}</p>` : ''}
+              </div>
+              
+              <p>Enjoy your time off!</p>
+              
+              <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+                This is an automated email. Please do not reply.
+              </p>
+            </div>
+          `
+        });
+        console.log(`✅ Leave approval email sent to ${employee.email}`);
+      }
+    } catch (emailErr) {
+      console.error('Failed to send leave approval email:', emailErr);
+      // Don't fail the request if email fails
+    }
+    
     res.json({ message: 'Approved', id });
   } catch (e) {
     try { await client.query('ROLLBACK'); } catch(_) {}
@@ -283,7 +330,57 @@ export async function rejectLeaveRequest(req, res) {
     if (!lrQ.rowCount) return res.status(404).json({ error: 'Leave request not found' });
     if (lrQ.rows[0].company_id !== companyId) return res.status(403).json({ error: 'Forbidden' });
     if (lrQ.rows[0].status !== 'pending') return res.status(400).json({ error: 'Request already processed' });
+    
+    const reqRow = lrQ.rows[0];
+    
     await pool.query(`UPDATE leave_requests SET status='rejected', reviewed_by=$1, updated_at=NOW() WHERE id=$2`, [req.user.id, id]);
+    
+    // Send email notification to employee
+    try {
+      const empQ = await pool.query(
+        'SELECT first_name, last_name, email FROM employees WHERE id=$1',
+        [reqRow.employee_id]
+      );
+      const ltQ = await pool.query('SELECT name FROM leave_types WHERE id=$1', [reqRow.leave_type_id]);
+      
+      if (empQ.rows.length && empQ.rows[0].email) {
+        const employee = empQ.rows[0];
+        const leaveType = ltQ.rows[0]?.name || 'Leave';
+        const days = Math.floor((new Date(reqRow.end_date) - new Date(reqRow.start_date)) / 86400000) + 1;
+        
+        await sendMail({
+          to: employee.email,
+          subject: '❌ Leave Request Rejected',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ef4444;">Leave Request Rejected</h2>
+              <p>Dear ${employee.first_name} ${employee.last_name},</p>
+              <p>We regret to inform you that your leave request has been <strong style="color: #ef4444;">rejected</strong>.</p>
+              
+              <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+                <h3 style="margin-top: 0;">Leave Details</h3>
+                <p><strong>Type:</strong> ${leaveType}</p>
+                <p><strong>From:</strong> ${new Date(reqRow.start_date).toLocaleDateString()}</p>
+                <p><strong>To:</strong> ${new Date(reqRow.end_date).toLocaleDateString()}</p>
+                <p><strong>Duration:</strong> ${days} day(s)</p>
+                ${reqRow.reason ? `<p><strong>Your Reason:</strong> ${reqRow.reason}</p>` : ''}
+              </div>
+              
+              <p>Please contact HR if you have any questions or would like to discuss this decision.</p>
+              
+              <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+                This is an automated email. Please do not reply.
+              </p>
+            </div>
+          `
+        });
+        console.log(`📧 Leave rejection email sent to ${employee.email}`);
+      }
+    } catch (emailErr) {
+      console.error('Failed to send leave rejection email:', emailErr);
+      // Don't fail the request if email fails
+    }
+    
     res.json({ message: 'Rejected', id });
   } catch (e) {
     console.error(e);

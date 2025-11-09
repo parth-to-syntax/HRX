@@ -22,6 +22,7 @@ export default function EmployeeDirectory() {
   const { list: employees } = useSelector((state) => state.employees)
   const { records } = useSelector((state) => state.attendance)
   const { requests } = useSelector((state) => state.leave)
+  const employeeStatusMap = useSelector((state) => state.attendance?.employeeStatusMap || {})
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [selectedEmployeeSalary, setSelectedEmployeeSalary] = useState(null)
@@ -40,6 +41,8 @@ export default function EmployeeDirectory() {
   console.log('Current User:', currentUser)
   console.log('User Role:', currentUser?.user?.role || currentUser?.role)
   console.log('isHRAdminOrPayroll:', isHRAdminOrPayroll)
+  console.log('Employee Status Map:', employeeStatusMap)
+  console.log('Employees List:', employees.map(e => ({ id: e.id, name: `${e.first_name} ${e.last_name}` })))
 
   // Fetch employees (with backend attendance enrichment for admin/hr) on load
   useEffect(() => {
@@ -309,9 +312,11 @@ export default function EmployeeDirectory() {
                       {/* Status Text and Hours */}
                       <div className="mt-1">
                         {(() => {
-                          // Use backend attendance data if available (for admin/hr)
-                          const attendance = employee.attendance
+                          // SIMPLE: Just use backend attendance_status from employee object
                           const status = employee.attendance_status
+                          const attendance = employee.attendance
+                          
+                          console.log(`Employee ${employee.id} (${employee.first_name}) status:`, status)
                           
                           if (status === 'leave') {
                             return (

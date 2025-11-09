@@ -26,11 +26,11 @@ export const DEFAULT_RIGHTS = {
     settings: { view: false }
   },
   employee: {
-    employees: { view: true },
-    salary: { view: true },
-    attendance: { view: true },
-    leaves: { view: true, create: true },
-    payroll: { view: true },
+    employees: { view: true },  // Can view directory but not modify
+    salary: { view: false },     // Cannot access salary module
+    attendance: { view: true },  // Can view own attendance
+    leaves: { view: true, create: true },  // Can apply for leaves and view status
+    payroll: { view: false },    // Cannot access payroll module (only own payslip via special endpoint)
     settings: { view: false }
   }
 };

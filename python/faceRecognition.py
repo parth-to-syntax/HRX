@@ -174,49 +174,113 @@ def compare_faces():
     data = request.get_json(silent=True)
     
     if not data:
+        logger.error('No data provided in request')
         return jsonify({'success': False, 'message': 'No data provided'}), 400
     
     enrolled_url = data.get('enrolledPhotoUrl')
     checkin_url = data.get('checkInPhotoUrl')
     
     if not enrolled_url or not checkin_url:
+        logger.error('Missing required URLs: enrolled=%s, checkin=%s', bool(enrolled_url), bool(checkin_url))
         return jsonify({'success': False, 'message': 'Both enrolledPhotoUrl and checkInPhotoUrl are required'}), 400
     
     try:
         # Download and process enrolled photo
         logger.debug('Downloading enrolled photo from: %s', enrolled_url)
-        enrolled_resp = requests.get(enrolled_url)
-        enrolled_img = Image.open(BytesIO(enrolled_resp.content)).convert('RGB')
+        try:
+            enrolled_resp = requests.get(enrolled_url, timeout=10)
+            enrolled_resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error('Failed to download enrolled photo: %s', str(e))
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': f'Failed to download enrolled photo: {str(e)}'
+            }), 500
+        
+        try:
+            enrolled_img = Image.open(BytesIO(enrolled_resp.content)).convert('RGB')
+        except Exception as e:
+            logger.error('Failed to decode enrolled image: %s', str(e))
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': f'Invalid enrolled image format: {str(e)}'
+            }), 500
+        
         enrolled_array = np.array(enrolled_img)
+        logger.debug('Enrolled image loaded: shape=%s', enrolled_array.shape)
         
         # Download and process check-in photo
         logger.debug('Downloading check-in photo from: %s', checkin_url)
-        checkin_resp = requests.get(checkin_url)
-        checkin_img = Image.open(BytesIO(checkin_resp.content)).convert('RGB')
+        try:
+            checkin_resp = requests.get(checkin_url, timeout=10)
+            checkin_resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error('Failed to download check-in photo: %s', str(e))
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': f'Failed to download check-in photo: {str(e)}'
+            }), 500
+        
+        try:
+            checkin_img = Image.open(BytesIO(checkin_resp.content)).convert('RGB')
+        except Exception as e:
+            logger.error('Failed to decode check-in image: %s', str(e))
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': f'Invalid check-in image format: {str(e)}'
+            }), 500
+        
         checkin_array = np.array(checkin_img)
+        logger.debug('Check-in image loaded: shape=%s', checkin_array.shape)
         
         # Get face encodings
         logger.debug('Encoding enrolled face')
-        enrolled_encodings = face_recognition.face_encodings(enrolled_array)
-        if not enrolled_encodings:
+        try:
+            enrolled_encodings = face_recognition.face_encodings(enrolled_array)
+        except Exception as e:
+            logger.error('Failed to encode enrolled face: %s', str(e))
             return jsonify({
                 'success': False,
                 'isMatch': False,
-                'message': 'No face detected in enrolled photo'
+                'message': f'Failed to process enrolled face: {str(e)}'
+            }), 500
+        
+        if not enrolled_encodings:
+            logger.warning('No face detected in enrolled photo')
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': 'No face detected in enrolled photo. Please re-enroll with a clear face photo.'
             }), 200
         
         logger.debug('Encoding check-in face')
-        checkin_encodings = face_recognition.face_encodings(checkin_array)
-        if not checkin_encodings:
+        try:
+            checkin_encodings = face_recognition.face_encodings(checkin_array)
+        except Exception as e:
+            logger.error('Failed to encode check-in face: %s', str(e))
             return jsonify({
                 'success': False,
                 'isMatch': False,
-                'message': 'No face detected in check-in photo'
+                'message': f'Failed to process check-in face: {str(e)}'
+            }), 500
+        
+        if not checkin_encodings:
+            logger.warning('No face detected in check-in photo')
+            return jsonify({
+                'success': False,
+                'isMatch': False,
+                'message': 'No face detected in check-in photo. Please ensure your face is clearly visible and well-lit.'
             }), 200
         
         # Compare faces
         enrolled_encoding = enrolled_encodings[0]
         checkin_encoding = checkin_encodings[0]
+        
+        logger.debug('Comparing face encodings')
         
         # Get face distance (lower is better, 0.6 is default threshold)
         face_distance = face_recognition.face_distance([enrolled_encoding], checkin_encoding)[0]
@@ -241,11 +305,11 @@ def compare_faces():
         })
         
     except Exception as err:
-        logger.error('Error comparing faces: %s', err)
+        logger.exception('Unexpected error comparing faces')
         return jsonify({
             'success': False,
             'isMatch': False,
-            'message': f'Error comparing faces: {str(err)}'
+            'message': f'Unexpected error comparing faces: {str(err)}'
         }), 500
 
 @app.route('/refresh-faces', methods=['POST'])

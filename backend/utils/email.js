@@ -12,6 +12,12 @@ function buildTransporter() {
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
   const pass = process.env.SMTP_PASS || (process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : undefined);
 
+  console.log('🔍 Email Configuration Debug:');
+  console.log('  Host:', host);
+  console.log('  Port:', port);
+  console.log('  User:', user);
+  console.log('  NODE_ENV:', process.env.NODE_ENV);
+
   if (!host || !user || !pass) {
     return null; // No mail transport configured
   }
@@ -20,9 +26,23 @@ function buildTransporter() {
   const secure = toBool(process.env.SMTP_SECURE, port === 465 || false);
   const ignoreTLS = toBool(process.env.SMTP_IGNORE_TLS, false);
   const requireTLS = toBool(process.env.SMTP_REQUIRE_TLS, false);
-  const rejectUnauthorized = process.env.SMTP_REJECT_UNAUTHORIZED !== undefined
-    ? toBool(process.env.SMTP_REJECT_UNAUTHORIZED)
-    : !toBool(process.env.EMAIL_INSECURE_TLS, false); // EMAIL_INSECURE_TLS=true => do not reject
+  
+  // In development, default to accepting self-signed certificates
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  let rejectUnauthorized;
+  
+  if (process.env.SMTP_REJECT_UNAUTHORIZED !== undefined) {
+    rejectUnauthorized = toBool(process.env.SMTP_REJECT_UNAUTHORIZED);
+  } else if (process.env.EMAIL_INSECURE_TLS !== undefined) {
+    rejectUnauthorized = !toBool(process.env.EMAIL_INSECURE_TLS);
+  } else {
+    // Default: reject in production, accept in development
+    rejectUnauthorized = !isDevelopment;
+  }
+
+  console.log('  isDevelopment:', isDevelopment);
+  console.log('  rejectUnauthorized:', rejectUnauthorized);
+  console.log('  secure:', secure);
 
   const transporter = nodemailer.createTransport({
     host,
@@ -31,7 +51,11 @@ function buildTransporter() {
     ignoreTLS,
     requireTLS,
     auth: { user, pass },
-    tls: { rejectUnauthorized },
+    tls: { 
+      rejectUnauthorized,
+      // Additional options for self-signed certificates
+      minVersion: 'TLSv1.2'
+    },
   });
   return transporter;
 }

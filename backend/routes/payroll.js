@@ -14,7 +14,9 @@ import {
   getPayslipPdf,
   getEmployeeYearSalaryPdf,
   monthlyEmployerCost,
-  monthlyEmployeeCount
+  monthlyEmployeeCount,
+  sendPayrunEmails,
+  sendSinglePayslipEmail
 } from '../controllers/payrollController.js';
 
 const router = express.Router();
@@ -56,5 +58,9 @@ router.get('/reports/employee-count', authRequired, rolesAllowed('admin','payrol
 
 // Self payslips
 router.get('/me/payslips', authRequired, listMyPayslips);
+
+// Email endpoints - Admin/HR/Payroll only
+router.post('/payruns/:id/send-emails', authRequired, rolesAllowed('admin','hr','payroll'), sendPayrunEmails);
+router.post('/payslips/:id/send-email', authRequired, rolesAllowed('admin','hr','payroll'), sendSinglePayslipEmail);
 
 export default router;

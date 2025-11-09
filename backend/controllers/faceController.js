@@ -24,6 +24,8 @@ const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 'http://localhost:5001'
 async function compareFaces(enrolledPhotoUrl, checkInPhotoUrl) {
   try {
     console.log('Calling Python face service for comparison...');
+    console.log('Enrolled photo URL:', enrolledPhotoUrl);
+    console.log('Check-in photo URL:', checkInPhotoUrl);
     
     const response = await fetch(`${FACE_SERVICE_URL}/compare-faces`, {
       method: 'POST',
@@ -33,25 +35,36 @@ async function compareFaces(enrolledPhotoUrl, checkInPhotoUrl) {
       body: JSON.stringify({
         enrolledPhotoUrl,
         checkInPhotoUrl
-      })
+      }),
+      timeout: 30000 // 30 second timeout
     });
     
+    const result = await response.json();
+    console.log('Face service response:', result);
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Face service error');
+      throw new Error(result.message || `Face service error: ${response.status}`);
     }
     
-    const result = await response.json();
-    console.log('Face comparison result:', result);
+    if (!result.success) {
+      throw new Error(result.message || 'Face comparison failed');
+    }
+    
+    console.log('Face comparison result:', {
+      isMatch: result.isMatch,
+      confidence: result.confidence,
+      message: result.message
+    });
     
     return {
       isMatch: result.isMatch,
       confidence: result.confidence,
-      message: result.message
+      message: result.message,
+      faceDistance: result.faceDistance
     };
   } catch (error) {
-    console.error('Face comparison error:', error);
-    throw error;
+    console.error('Face comparison error:', error.message);
+    throw new Error(error.message || 'Face service unavailable');
   }
 }
 
@@ -214,19 +227,19 @@ export async function checkInWithFace(req, res) {
       comparisonResult = await compareFaces(enrolledPhotoUrl, checkInPhotoUrl);
       console.log(`Face match for employee ${emp.id}: ${(comparisonResult.confidence * 100).toFixed(2)}% - Match: ${comparisonResult.isMatch}`);
     } catch (error) {
-      console.error('Face comparison failed:', error);
+      console.error('Face comparison failed:', error.message);
       
-      // Log failed attempt
+      // Log failed attempt with detailed error
       await pool.query(
         `INSERT INTO face_checkin_logs 
          (employee_id, success, confidence_score, temp_photo_url, error_reason) 
          VALUES ($1, FALSE, $2, $3, $4)`,
-        [emp.id, 0, checkInPhotoUrl, `Face comparison service error: ${error.message}`]
+        [emp.id, 0, checkInPhotoUrl, error.message]
       );
       
       return res.status(500).json({
         error: 'Face comparison failed',
-        details: 'Unable to verify face. Please try again.'
+        details: error.message || 'Unable to verify face. Please ensure good lighting and your face is clearly visible, then try again.'
       });
     }
 

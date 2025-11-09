@@ -9,6 +9,9 @@ import leaveRoutes from './routes/leave.js';
 import payrollRoutes from './routes/payroll.js';
 import adminRoutes from './routes/admin.js';
 import faceRoutes from './routes/face.js';
+import cacheRoutes from './routes/cache.js';
+import uploadRoutes from './routes/upload.js';
+import { initCronJobs } from './services/cronService.js';
 
 const app = express();
 // Allow credentials for cookie-based auth; configure origin via env (comma-separated)
@@ -25,6 +28,11 @@ app.use('/leaves', leaveRoutes);
 app.use('/payroll', payrollRoutes);
 app.use('/admin', adminRoutes);
 app.use('/face', faceRoutes);
+app.use('/cache', cacheRoutes);
+app.use('/upload', uploadRoutes);
+
+// Serve static files (avatars, uploads)
+app.use('/avatars', express.static('public/avatars'));
 
 // Automated daily absence marking (runs once on startup and then every hour)
 async function markPreviousDayAbsents() {
@@ -65,6 +73,10 @@ setInterval(markPreviousDayAbsents, 60 * 60 * 1000);
   try {
     await initDatabase();
     console.log('Database initialized.');
+    
+    // Initialize cron jobs for automated tasks (e.g., monthly payslip emails)
+    initCronJobs();
+    console.log('Cron jobs initialized.');
   } catch (err) {
     console.error('Database initialization error:', err.message);
   }

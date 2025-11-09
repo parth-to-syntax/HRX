@@ -86,7 +86,7 @@ function App() {
       <PersistGate loading={<div className="p-6 text-sm">Loading...</div>} persistor={persistor}>
         <ThemeProvider>
           <Router>
-            <Toaster position="top-right" toastOptions={{ duration: 300 }} />
+            <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
             <AppRoutes />
           </Router>
         </ThemeProvider>
