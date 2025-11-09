@@ -2,7 +2,7 @@
 
 Modern HRMS with facial recognition attendance, automated payroll, and complete employee management.
 
-**📁 [Project Resources & Documentation](https://drive.google.com/drive/u/0/folders/1rXy-fVDjCxwq9upabgJWAKxo2WtZnvA4)**
+**📁 [G-Drive link](https://drive.google.com/drive/u/0/folders/1rXy-fVDjCxwq9upabgJWAKxo2WtZnvA4)**
 
 ## Features
 
